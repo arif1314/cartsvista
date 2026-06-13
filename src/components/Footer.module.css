@@ -1,0 +1,299 @@
+.footer {
+  background: #080808; /* Obsidian deep black */
+  color: #ffffff;
+  padding: 6.5rem 0 3rem;
+  border-top: 1px solid rgba(197, 168, 128, 0.15); /* Delicate gold divider */
+}
+
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 2.5rem;
+}
+
+.footerGrid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr 1.4fr;
+  gap: 3.5rem;
+  margin-bottom: 5rem;
+}
+
+.brandColumn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.brandLogo {
+  font-family: var(--font-sans);
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: #ffffff;
+  text-decoration: none;
+  margin-bottom: 0.35rem;
+  transition: color 0.3s ease;
+}
+
+.brandLogo:hover {
+  color: var(--accent);
+}
+
+.brandTagline {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+}
+
+.brandDesc {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: #888888;
+  margin-bottom: 2rem;
+  max-width: 90%;
+}
+
+.socialLinks {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.socialLink {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: #888888;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 2px;
+}
+
+.socialLink:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.column {
+  /* For smooth mobile accordion transitions */
+  overflow: hidden;
+}
+
+.colHeader {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #ffffff;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+}
+
+.chevron { 
+  display: none; 
+}
+
+.colList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.colList li a {
+  text-decoration: none;
+  color: #888888;
+  font-size: 0.82rem;
+  transition: color 0.3s ease, padding-left 0.3s ease;
+  display: inline-block;
+}
+
+.colList li a:hover { 
+  color: var(--accent);
+  padding-left: 4px;
+}
+
+/* Contact / Atelier Column */
+.contactColumn {
+  display: flex;
+  flex-direction: column;
+}
+
+.contactDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.contactItem {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+}
+
+.contactIcon {
+  color: var(--accent);
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.contactItem p,
+.contactItem a {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #888888;
+  margin: 0;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.contactItem a:hover {
+  color: var(--accent);
+}
+
+.hoursBlock p {
+  margin-bottom: 0.35rem;
+}
+
+.hoursBlock p:last-child {
+  margin-bottom: 0;
+}
+
+/* Bottom Bar */
+.bottomBar {
+  padding-top: 2.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.bottomFlex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.bottomFlex p {
+  font-size: 0.78rem;
+  color: #555555;
+  font-weight: 300;
+  margin: 0;
+}
+
+.paymentMethods {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.paymentLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #555555;
+}
+
+.payBanner {
+  height: 25px;
+  object-fit: contain;
+  opacity: 0.65;
+  transition: all 0.3s ease;
+}
+
+.payBanner:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 1024px) {
+  .footerGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem;
+  }
+  
+  .brandColumn {
+    grid-column: span 3;
+    max-width: 600px;
+  }
+  
+  .contactColumn {
+    grid-column: span 3;
+  }
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 4rem 1rem 6.5rem; /* Extra padding for mobile bottom nav */
+  }
+  
+  .footerGrid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  
+  .brandColumn {
+    grid-column: span 1;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 2rem;
+    margin-bottom: 1.5rem;
+    max-width: 100%;
+  }
+  
+  .column {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1.5rem 0;
+  }
+  
+  .contactColumn {
+    grid-column: span 1;
+    padding: 2rem 0;
+    border-bottom: none;
+  }
+  
+  .colHeader {
+    margin-bottom: 0;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: #ffffff;
+  }
+  
+  .chevron { 
+    display: block; 
+    transition: transform 0.3s ease; 
+  }
+  
+  .rotated { 
+    transform: rotate(180deg); 
+  }
+  
+  .colList {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, margin-top 0.4s ease;
+  }
+  
+  .colList.open {
+    max-height: 250px;
+    margin-top: 1.5rem;
+  }
+  
+  .bottomFlex {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.5rem;
+  }
+  
+  .paymentMethods {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}

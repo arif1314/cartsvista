@@ -1,0 +1,188 @@
+.title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  color: #121212;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 3rem;
+  font-size: 1rem;
+}
+
+.ordersList {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.orderCard {
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.orderHeader {
+  background: #fdfdfd;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #eaeaea;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.headerInfo {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.divider {
+  width: 1px;
+  height: 40px;
+  background: #eaeaea;
+}
+
+.label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+  margin-bottom: 0.25rem;
+}
+
+.value {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #121212;
+}
+
+.invoiceBtn {
+  background: transparent;
+  border: 1px solid #121212;
+  color: #121212;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.invoiceBtn:hover {
+  background: #121212;
+  color: #fff;
+}
+
+.orderDetails {
+  padding: 2rem;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statusProcessing {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.statusDelivered {
+  background: #d4edda;
+  color: #155724;
+}
+
+.statusText {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.itemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.item img {
+  width: 80px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.itemInfo {
+  flex: 1;
+}
+
+.itemInfo h4 {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #121212;
+  margin-bottom: 0.5rem;
+}
+
+.itemInfo p {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.actionBtn {
+  background: transparent;
+  border: none;
+  color: #121212;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .orderHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.5rem;
+  }
+  .headerInfo {
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .divider {
+    display: none;
+  }
+  .statusRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

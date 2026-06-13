@@ -1,0 +1,470 @@
+.supportContainer {
+  width: 100%;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1.5rem;
+}
+
+.pageHeader h2 {
+  font-family: var(--font-sans);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.25rem;
+}
+
+.pageHeader p {
+  font-size: 0.875rem;
+  color: var(--secondary);
+  margin: 0;
+}
+
+.refreshBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--primary);
+  border: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.refreshBtn:hover {
+  background: #fafafa;
+  border-color: var(--primary);
+}
+
+.refreshBtn svg {
+  transition: transform 0.4s ease;
+}
+
+.refreshBtn:active svg {
+  transform: rotate(180deg);
+}
+
+/* Loading & Empty States */
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 0;
+  color: var(--secondary);
+}
+
+.loader {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 5rem 2rem;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: #fbfbfb;
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+.emptyIcon {
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  opacity: 0.7;
+}
+
+.emptyState h3 {
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.emptyState p {
+  font-size: 0.9rem;
+  color: var(--secondary);
+  line-height: 1.6;
+}
+
+.emptyNote {
+  margin-top: 1.5rem !important;
+  font-size: 0.8rem !important;
+  color: #888888 !important;
+  background: #ffffff;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+/* Main Layout Grid */
+.contentGrid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 992px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tickets Card List */
+.ticketsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.ticketCard {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.ticketCard:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.activeCard {
+  border-color: var(--primary);
+  background: #fafafa;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.ticketCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.ticketId {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--secondary);
+  letter-spacing: 0.05em;
+}
+
+.ticketSubject {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 1rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ticketCardFooter {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: #888888;
+}
+
+.chevron {
+  margin-left: auto;
+  color: #b5b5b5;
+  transition: transform 0.3s ease;
+}
+
+.ticketCard:hover .chevron {
+  transform: translateX(3px);
+  color: var(--primary);
+}
+
+/* Status Badges */
+.statusBadge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+}
+
+.statusOpen {
+  background: rgba(197, 168, 128, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(197, 168, 128, 0.3);
+}
+
+.statusReplied {
+  background: rgba(56, 142, 60, 0.08);
+  color: var(--success);
+  border: 1px solid rgba(56, 142, 60, 0.2);
+}
+
+.statusClosed {
+  background: #f1f1f1;
+  color: #777777;
+  border: 1px solid #dcdcdc;
+}
+
+/* Ticket Details Screen */
+.ticketDetails {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  min-height: 450px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.noSelectionBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: var(--secondary);
+  padding: 3rem;
+  text-align: center;
+}
+
+.dimIcon {
+  opacity: 0.25;
+  margin-bottom: 1.5rem;
+}
+
+.noSelectionBox h3 {
+  font-family: var(--font-sans);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.noSelectionBox p {
+  font-size: 0.875rem;
+  max-width: 320px;
+}
+
+.detailsBox {
+  display: flex;
+  flex-direction: column;
+  height: 600px;
+}
+
+.detailsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.detailsHeader h3 {
+  font-family: var(--font-sans);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.35rem;
+}
+
+.ticketMeta {
+  font-size: 0.75rem;
+  color: #888888;
+  margin: 0;
+}
+
+/* Chat Thread */
+.chatThread {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.chatMessage {
+  display: flex;
+  flex-direction: column;
+  max-width: 75%;
+}
+
+.msgHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.senderName {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.msgTime {
+  font-size: 0.65rem;
+  color: #888888;
+}
+
+.msgBody {
+  padding: 0.85rem 1.15rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.msgBody p {
+  color: inherit;
+  margin: 0;
+}
+
+/* Customer Message layout (Right side) */
+.customerMsg {
+  align-self: flex-end;
+}
+
+.customerMsg .msgHeader {
+  flex-direction: row-reverse;
+}
+
+.customerMsg .msgBody {
+  background: #fbf6f0; /* light warm cream */
+  border: 1px solid rgba(197, 168, 128, 0.2);
+  color: #4a3e2a;
+  border-bottom-right-radius: 2px;
+}
+
+/* Admin Message layout (Left side) */
+.adminMsg {
+  align-self: flex-start;
+}
+
+.adminMsg .msgBody {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--primary);
+  border-bottom-left-radius: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+/* Reply Input Box */
+.replyForm {
+  padding: 1.25rem 2rem;
+  border-top: 1px solid var(--border);
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.replyForm textarea {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  outline: none;
+  background: #fafafa;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  resize: none;
+}
+
+.replyForm textarea:focus {
+  border-color: var(--accent);
+  background: #ffffff;
+}
+
+.sendBtn {
+  align-self: flex-end;
+  background: var(--primary);
+  color: white;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.3s ease;
+}
+
+.sendBtn:hover {
+  background: transparent;
+  color: var(--primary);
+}
+
+.sendBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.miniLoader {
+  width: 14px;
+  height: 14px;
+  border: 2px solid white;
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Closed Ticket Banner */
+.closedBanner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem 2rem;
+  background: #fafafa;
+  border-top: 1px solid var(--border);
+  color: #777777;
+  font-size: 0.82rem;
+}
+
+.closedBanner svg {
+  color: #888888;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

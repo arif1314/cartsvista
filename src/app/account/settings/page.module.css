@@ -1,0 +1,101 @@
+.title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  color: #121212;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 3rem;
+  font-size: 1rem;
+}
+
+.formCard {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  padding: 3rem;
+}
+
+.formSection h3 {
+  font-size: 1.25rem;
+  color: #121212;
+  margin-bottom: 2rem;
+  font-weight: 500;
+}
+
+.inputRow {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.inputGroup label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.inputGroup input {
+  padding: 1rem;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  font-family: inherit;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s;
+  border-radius: 4px;
+}
+
+.inputGroup input:focus {
+  border-color: #121212;
+  background: #fff;
+}
+
+.divider {
+  height: 1px;
+  background: #eaeaea;
+  margin: 3rem 0;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+.saveBtn {
+  background: #121212;
+  color: #fff;
+  border: none;
+  padding: 1rem 2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background 0.3s;
+  border-radius: 4px;
+}
+
+.saveBtn:hover {
+  background: #333;
+}
+
+@media (max-width: 768px) {
+  .formCard {
+    padding: 2rem 1.5rem;
+  }
+  .inputRow {
+    flex-direction: column;
+    gap: 0;
+  }
+}

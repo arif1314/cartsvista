@@ -1,0 +1,52 @@
+.bottomNav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #eaeaea;
+  border-top: 1px solid #d1d1d1;
+  z-index: 1000;
+  padding: 0.75rem 0;
+  padding-bottom: env(safe-area-inset-bottom, 0.75rem); /* For iOS safe area */
+}
+
+.navItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: #333;
+  gap: 0.35rem;
+}
+
+.navItem span {
+  font-size: 0.6rem;
+  font-weight: 500;
+}
+
+.cartIconWrapper {
+  position: relative;
+}
+
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: #e53935;
+  color: white;
+  font-size: 0.55rem;
+  font-weight: bold;
+  padding: 2px 4px;
+  border-radius: 10px;
+  min-width: 14px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .bottomNav {
+    display: flex;
+  }
+}

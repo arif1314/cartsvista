@@ -1,0 +1,579 @@
+.supportContainer {
+  width: 100%;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+/* Filter Bar Tabs */
+.filterBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.statusTabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tabBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tabBtn:hover {
+  color: var(--primary);
+  background: #f5f5f5;
+}
+
+.activeTab {
+  color: var(--primary);
+  background: #f0f0f0;
+  border-color: #e0e0e0;
+}
+
+.tabCount {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: #e0e0e0;
+  color: var(--primary);
+  padding: 0.15rem 0.45rem;
+  border-radius: 10px;
+}
+
+.activeTab .tabCount {
+  background: var(--primary);
+  color: white;
+}
+
+.refreshBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--primary);
+  border: 1px solid var(--border);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.refreshBtn:hover {
+  background: #fafafa;
+  border-color: var(--primary);
+}
+
+.refreshBtn svg {
+  transition: transform 0.4s ease;
+}
+
+.refreshBtn:active svg {
+  transform: rotate(180deg);
+}
+
+/* Loading & Empty States */
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 0;
+  color: var(--secondary);
+}
+
+.loader {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 1rem;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 5rem 2rem;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: #fafafa;
+  color: var(--secondary);
+  max-width: 500px;
+  margin: 3rem auto;
+}
+
+.emptyIcon {
+  color: #c5a880;
+  opacity: 0.6;
+  margin-bottom: 1rem;
+}
+
+.emptyState h3 {
+  font-family: var(--font-sans);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.emptyState p {
+  font-size: 0.875rem;
+}
+
+/* Content Grid Pane */
+.contentGrid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tickets Card List */
+.ticketsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 620px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.ticketCard {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.ticketCard:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.activeCard {
+  border-color: var(--primary);
+  background: #fafafa;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.ticketCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.ticketId {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--secondary);
+}
+
+.ticketSubject {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 0.35rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customerName {
+  font-size: 0.8rem;
+  color: var(--secondary);
+  margin-bottom: 1rem;
+}
+
+.ticketCardFooter {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: #888888;
+}
+
+.chevron {
+  margin-left: auto;
+  color: #cccccc;
+  transition: transform 0.3s ease;
+}
+
+.ticketCard:hover .chevron {
+  transform: translateX(2px);
+  color: var(--primary);
+}
+
+/* Status Badges */
+.statusBadge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.statusOpen {
+  background: rgba(197, 168, 128, 0.1);
+  color: var(--accent);
+  border: 1px solid rgba(197, 168, 128, 0.3);
+}
+
+.statusReplied {
+  background: rgba(56, 142, 60, 0.08);
+  color: var(--success);
+  border: 1px solid rgba(56, 142, 60, 0.2);
+}
+
+.statusClosed {
+  background: #f0f0f0;
+  color: #777777;
+  border: 1px solid #d0d0d0;
+}
+
+/* Detail conversation Box */
+.ticketDetails {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-height: 500px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.noSelectionBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  color: var(--secondary);
+  padding: 3rem;
+  text-align: center;
+}
+
+.dimIcon {
+  opacity: 0.2;
+  margin-bottom: 1.5rem;
+}
+
+.noSelectionBox h3 {
+  font-family: var(--font-sans);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: var(--primary);
+}
+
+.noSelectionBox p {
+  font-size: 0.875rem;
+  max-width: 320px;
+}
+
+.detailsBox {
+  display: flex;
+  flex-direction: column;
+  height: 620px;
+}
+
+.detailsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.headerInfo h3 {
+  font-family: var(--font-sans);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.35rem;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--secondary);
+}
+
+.divider {
+  color: #d0d0d0;
+}
+
+.mailLink {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.mailLink:hover {
+  color: var(--primary);
+}
+
+/* Status Controls */
+.statusControls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+
+.controlLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #888888;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.controlGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.closeActionBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: white;
+  color: var(--success);
+  border: 1px solid rgba(56, 142, 60, 0.4);
+  border-radius: 4px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.closeActionBtn:hover {
+  background: var(--success);
+  color: white;
+  border-color: var(--success);
+}
+
+.reopenActionBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: white;
+  color: var(--accent);
+  border: 1px solid rgba(197, 168, 128, 0.4);
+  border-radius: 4px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.reopenActionBtn:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+/* Chat Threads Box */
+.chatThread {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.chatMessage {
+  display: flex;
+  flex-direction: column;
+  max-width: 75%;
+}
+
+.msgHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.senderName {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.msgTime {
+  font-size: 0.65rem;
+  color: #888888;
+}
+
+.msgBody {
+  padding: 0.85rem 1.15rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.msgBody p {
+  color: inherit;
+  margin: 0;
+}
+
+/* Client messages (Left side for admin view) */
+.customerMsg {
+  align-self: flex-start;
+}
+
+.customerMsg .msgBody {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--primary);
+  border-bottom-left-radius: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+/* Admin replies (Right side for admin view) */
+.adminMsg {
+  align-self: flex-end;
+}
+
+.adminMsg .msgHeader {
+  flex-direction: row-reverse;
+}
+
+.adminMsg .msgBody {
+  background: #fbf6f0; /* light warm gold tint */
+  border: 1px solid rgba(197, 168, 128, 0.2);
+  color: #4a3e2a;
+  border-bottom-right-radius: 2px;
+}
+
+/* Reply Forms */
+.replyForm {
+  padding: 1.25rem 2rem;
+  border-top: 1px solid var(--border);
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.replyForm textarea {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  outline: none;
+  background: #fafafa;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  resize: none;
+}
+
+.replyForm textarea:focus {
+  border-color: var(--accent);
+  background: #ffffff;
+}
+
+.sendBtn {
+  align-self: flex-end;
+  background: var(--primary);
+  color: white;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.3s ease;
+}
+
+.sendBtn:hover {
+  background: transparent;
+  color: var(--primary);
+}
+
+.sendBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.miniLoader {
+  width: 14px;
+  height: 14px;
+  border: 2px solid white;
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Closed banner info */
+.closedBanner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem 2rem;
+  background: #fafafa;
+  border-top: 1px solid var(--border);
+  color: #777777;
+  font-size: 0.82rem;
+}
+
+.closedBanner svg {
+  color: var(--success);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

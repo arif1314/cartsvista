@@ -1,0 +1,354 @@
+.widgetContainer {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 9999;
+  width: 65px;
+  height: 65px;
+}
+
+@media (max-width: 768px) {
+  .widgetContainer {
+    bottom: 5.5rem; 
+    right: 1.5rem;
+  }
+}
+
+.mainButton {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 65px;
+  height: 65px;
+  border-radius: 50% 50% 10px 50%; 
+  background: rgba(120, 120, 130, 0.35); 
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(255,255,255,0.1);
+  transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.mainButton.isOpen {
+  border-radius: 50%; 
+  transform: rotate(90deg); 
+  background: rgba(100, 100, 110, 0.5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(0,0,0,0.2);
+}
+
+.flipHorizontal {
+  transform: scaleX(-1);
+}
+
+.menu {
+  position: absolute;
+  bottom: 32px; /* Center of main button vertically */
+  right: 32px;  /* Center of main button horizontally */
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.menuItem {
+  position: absolute;
+  bottom: -24px; /* Half of height to center it on the menu anchor */
+  right: -24px;  /* Half of width to center it on the menu anchor */
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(130, 130, 140, 0.6); /* Slightly more opaque for better contrast */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.5) translate(0, 0);
+  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), inset 0 0 10px rgba(255,255,255,0.1);
+}
+
+.menu.open .menuItem {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Arc curving UP and LEFT so it doesn't clip off the right edge of the screen */
+.menu.open .menuItem:nth-child(1) { transform: translate(-65px, -15px) scale(1); transition-delay: 0.05s; }
+.menu.open .menuItem:nth-child(2) { transform: translate(-60px, -75px) scale(1); transition-delay: 0.1s; }
+.menu.open .menuItem:nth-child(3) { transform: translate(-35px, -125px) scale(1); transition-delay: 0.15s; }
+.menu.open .menuItem:nth-child(4) { transform: translate(5px, -165px) scale(1); transition-delay: 0.2s; }
+.menu.open .menuItem:nth-child(5) { transform: translate(15px, -225px) scale(1); transition-delay: 0.25s; }
+
+.menuItem:nth-child(5) {
+  visibility: hidden;
+  opacity: 0 !important;
+}
+.menuItem.showScroll:nth-child(5) {
+  visibility: visible;
+}
+.menu.open .menuItem.showScroll:nth-child(5) {
+  opacity: 1 !important;
+}
+
+.menuItem:hover {
+  background: rgba(160, 160, 170, 0.8);
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+.menu.open .menuItem:nth-child(1):hover { transform: translate(-65px, -15px) scale(1.1); }
+.menu.open .menuItem:nth-child(2):hover { transform: translate(-60px, -75px) scale(1.1); }
+.menu.open .menuItem:nth-child(3):hover { transform: translate(-35px, -125px) scale(1.1); }
+.menu.open .menuItem:nth-child(4):hover { transform: translate(5px, -165px) scale(1.1); }
+.menu.open .menuItem:nth-child(5):hover { transform: translate(15px, -225px) scale(1.1); }
+
+/* Support Form Modal Styles */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.modalCard {
+  background: #ffffff;
+  width: 100%;
+  max-width: 500px;
+  border-radius: 16px;
+  border: 1px solid rgba(197, 168, 128, 0.25);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  padding: 2.5rem;
+  position: relative;
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (max-width: 576px) {
+  .modalCard {
+    width: calc(100% - 2rem);
+    padding: 1.75rem;
+  }
+}
+
+.closeBtn {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #888888;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeBtn:hover {
+  color: var(--primary);
+}
+
+.modalHeader {
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.modalHeader h2 {
+  font-family: var(--font-sans);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+.modalHeader p {
+  font-size: 0.875rem;
+  color: var(--secondary);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formGroup label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--primary);
+}
+
+.formGroup input,
+.formGroup textarea {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  outline: none;
+  background: #fafafa;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus {
+  border-color: var(--accent);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.15);
+}
+
+.submitBtn {
+  background: var(--primary);
+  color: white;
+  border: 1px solid var(--primary);
+  border-radius: 6px;
+  padding: 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.submitBtn:hover {
+  background: transparent;
+  color: var(--primary);
+}
+
+.submitBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Success State Styles */
+.successState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem 0 0.5rem;
+}
+
+.successBadge {
+  width: 60px;
+  height: 60px;
+  background: rgba(197, 168, 128, 0.1);
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.successState h3 {
+  font-family: var(--font-sans);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.ticketIdText {
+  font-size: 0.9rem;
+  color: var(--accent);
+  margin-bottom: 1.25rem;
+  background: #faf6f0;
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  border: 1px solid rgba(197, 168, 128, 0.15);
+}
+
+.successDesc {
+  font-size: 0.875rem;
+  color: var(--secondary);
+  line-height: 1.5;
+  margin-bottom: 1rem;
+}
+
+.successNote {
+  font-size: 0.8rem;
+  color: #888888;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+  background: #fcfcfc;
+  border-left: 2px solid var(--border);
+  padding: 0.5rem 0.75rem;
+}
+
+.doneBtn {
+  background: var(--primary);
+  color: white;
+  border: 1px solid var(--primary);
+  border-radius: 6px;
+  padding: 0.75rem 2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.doneBtn:hover {
+  background: transparent;
+  color: var(--primary);
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+

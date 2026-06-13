@@ -1,0 +1,179 @@
+.pageContainer {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 2rem 6rem;
+  background-color: #fdfdfd;
+}
+
+.header {
+  padding: 4rem 0 3rem;
+  border-bottom: 1px solid #eaeaea;
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.breadcrumb {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #888;
+  margin-bottom: 1rem;
+}
+
+.breadcrumb a {
+  color: #121212;
+  transition: color 0.3s;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.separator {
+  margin: 0 0.5rem;
+}
+
+.current {
+  color: #888;
+}
+
+.pageTitle {
+  font-family: var(--font-serif);
+  font-size: 3rem;
+  font-weight: 400;
+  color: #121212;
+}
+
+.contentLayout {
+  display: flex;
+  gap: 4rem;
+}
+
+.sidebar {
+  flex: 0 0 250px;
+}
+
+.sidebar h3 {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 2rem;
+  color: #121212;
+  font-weight: 600;
+}
+
+.sidebarList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sidebarList li a {
+  font-size: 0.95rem;
+  color: #666;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  display: inline-block;
+  padding-bottom: 0.25rem;
+}
+
+.sidebarList li.active a {
+  color: #121212;
+  font-weight: 600;
+  border-bottom: 1px solid #121212;
+}
+
+.sidebarList li a:hover {
+  color: #121212;
+}
+
+.mainContent {
+  flex: 1;
+  max-width: 800px;
+}
+
+/* Rich Text Styling matching ILLIYEEN premium feel */
+.richText h2 {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 400;
+  color: #121212;
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+}
+
+.richText h2:first-child {
+  margin-top: 0;
+}
+
+.richText h3 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.richText p {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #444;
+  margin-bottom: 1.5rem;
+}
+
+.richText ul {
+  padding-left: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.richText li {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #444;
+  margin-bottom: 0.75rem;
+}
+
+.richText strong {
+  font-weight: 600;
+  color: #121212;
+}
+
+@media (max-width: 1024px) {
+  .contentLayout {
+    flex-direction: column;
+    gap: 3rem;
+  }
+  .sidebar {
+    flex: none;
+    width: 100%;
+    border-bottom: 1px solid #eaeaea;
+    padding-bottom: 2rem;
+  }
+  .sidebarList {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding: 2rem 0;
+  }
+  .pageTitle {
+    font-size: 2.25rem;
+  }
+  .pageContainer {
+    padding: 0 1rem 4rem;
+  }
+  .richText h2 {
+    font-size: 1.75rem;
+  }
+  .sidebarList {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

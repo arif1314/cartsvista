@@ -1,0 +1,155 @@
+.pageContainer {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 2rem 6rem;
+  background-color: #fdfdfd;
+  min-height: 80vh;
+}
+
+.header {
+  padding: 4rem 0 3rem;
+  text-align: center;
+  border-bottom: 1px solid #eaeaea;
+  margin-bottom: 3rem;
+}
+
+.breadcrumb {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #888;
+  margin-bottom: 1rem;
+}
+
+.breadcrumb a {
+  color: #121212;
+  transition: color 0.3s;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.separator {
+  margin: 0 0.5rem;
+}
+
+.current {
+  color: #888;
+}
+
+.pageTitle {
+  font-family: var(--font-serif);
+  font-size: 3.5rem;
+  font-weight: 400;
+  color: #121212;
+  margin-bottom: 2rem;
+}
+
+.actionRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.actionRow p {
+  font-size: 0.9rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.clearBtn {
+  background: transparent;
+  border: none;
+  color: #121212;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 0 8rem;
+  text-align: center;
+}
+
+.emptyIcon {
+  color: #ccc;
+  margin-bottom: 2rem;
+}
+
+.emptyState h2 {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  color: #121212;
+  margin-bottom: 1rem;
+}
+
+.emptyState p {
+  color: #666;
+  font-size: 1.1rem;
+  margin-bottom: 3rem;
+  max-width: 400px;
+}
+
+.continueBtn {
+  display: inline-block;
+  background: #121212;
+  color: #fff;
+  padding: 1.25rem 3rem;
+  text-decoration: none;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: background 0.3s;
+}
+
+.continueBtn:hover {
+  background: #333;
+}
+
+@media (max-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding: 2rem 0;
+  }
+  .pageTitle {
+    font-size: 2.5rem;
+  }
+  .pageContainer {
+    padding: 0 1rem 4rem;
+  }
+  .emptyState h2 {
+    font-size: 2rem;
+  }
+}
