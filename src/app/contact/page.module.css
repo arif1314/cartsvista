@@ -115,6 +115,16 @@
   color: #121212;
 }
 
+.notice {
+  border: 1px solid #dbeafe;
+  background: #f0f7ff;
+  color: #1d4f91;
+  padding: 0.9rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+}
+
 .contactForm {
   display: flex;
   flex-direction: column;
@@ -171,6 +181,11 @@
 
 .submitBtn:hover {
   background: #333;
+}
+
+.submitBtn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 @media (max-width: 1024px) {

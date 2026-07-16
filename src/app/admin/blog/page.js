@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from 'react';
-import { useBlogs } from '@/context/BlogContext';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { 
   Plus, 
   Trash2, 
@@ -18,34 +18,45 @@ import {
 import styles from './page.module.css';
 
 export default function AdminBlogPage() {
-  const { 
-    articles, 
-    addArticle, 
-    updateArticle, 
-    deleteArticle, 
-    resetBlogs, 
-    isLoaded 
-  } = useBlogs();
-
-  const [editingId, setEditingId] = useState(null); // null means creating a new article
+  const [articles, setArticles] = useState([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   
   const [form, setForm] = useState({
     title: '',
     summary: '',
-    readingTime: '4 min read',
-    coverImage: '',
-    link: '',
+    reading_time: '4 min read',
+    cover_image: '',
+    related_link: '',
     content: ''
   });
 
   const [success, setSuccess] = useState(false);
   const [msg, setMsg] = useState('');
 
+  const fetchArticles = async () => {
+    setIsLoaded(false);
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('articles')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (!error && data) {
+      setArticles(data);
+    }
+    setIsLoaded(true);
+  };
+
+  useEffect(() => {
+    fetchArticles();
+  }, []);
+
   if (!isLoaded) {
     return (
       <div className={styles.loading}>
         <RefreshCw size={24} className={styles.spinner} />
-        Loading blog context...
+        Loading blog articles...
       </div>
     );
   }
@@ -55,9 +66,9 @@ export default function AdminBlogPage() {
     setForm({
       title: article.title || '',
       summary: article.summary || '',
-      readingTime: article.readingTime || '4 min read',
-      coverImage: article.coverImage || '',
-      link: article.link || '',
+      reading_time: article.reading_time || '4 min read',
+      cover_image: article.cover_image || '',
+      related_link: article.related_link || '',
       content: article.content || ''
     });
     setSuccess(false);
@@ -68,42 +79,79 @@ export default function AdminBlogPage() {
     setForm({
       title: '',
       summary: '',
-      readingTime: '4 min read',
-      coverImage: '',
-      link: '',
+      reading_time: '4 min read',
+      cover_image: '',
+      related_link: '',
       content: ''
     });
     setSuccess(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    const supabase = createClient();
+    
+    // Create slug
+    const slug = form.title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    const articleData = {
+      ...form,
+      slug,
+      is_published: true,
+      updated_at: new Date().toISOString()
+    };
+
     if (editingId) {
-      updateArticle(editingId, form);
-      setMsg("Article updated successfully!");
+      const { error } = await supabase
+        .from('articles')
+        .update(articleData)
+        .eq('id', editingId);
+      
+      if (!error) {
+        setMsg("Article updated successfully!");
+        setSuccess(true);
+        fetchArticles();
+      } else {
+        alert("Failed to update article.");
+      }
     } else {
-      addArticle(form);
-      setMsg("New article published successfully!");
-      handleNewClick();
+      const { error } = await supabase
+        .from('articles')
+        .insert([{ ...articleData, created_at: new Date().toISOString() }]);
+        
+      if (!error) {
+        setMsg("New article published successfully!");
+        setSuccess(true);
+        handleNewClick();
+        fetchArticles();
+      } else {
+        alert("Failed to publish article.");
+      }
     }
-    setSuccess(true);
     setTimeout(() => setSuccess(false), 3000);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (confirm("Are you sure you want to delete this article? This action cannot be undone.")) {
-      deleteArticle(id);
-      if (editingId === id) {
-        handleNewClick();
+      const supabase = createClient();
+      const { error } = await supabase.from('articles').delete().eq('id', id);
+      
+      if (!error) {
+        if (editingId === id) handleNewClick();
+        fetchArticles();
+      } else {
+        alert("Failed to delete article.");
       }
     }
   };
 
   const handleReset = () => {
-    if (confirm("Are you sure you want to reset all articles to defaults?")) {
-      resetBlogs();
-      handleNewClick();
-    }
+    fetchArticles();
   };
 
   return (
@@ -115,7 +163,7 @@ export default function AdminBlogPage() {
         </div>
         <button className={styles.resetBtn} onClick={handleReset}>
           <RefreshCw size={16} />
-          Reset to Defaults
+          Refresh
         </button>
       </div>
 
@@ -132,17 +180,19 @@ export default function AdminBlogPage() {
           <div className={styles.articlesList}>
             {articles.map((art) => {
               const isEditing = editingId === art.id;
+              const dateObj = new Date(art.created_at);
+              const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
               return (
                 <div 
                   key={art.id}
                   className={`${styles.articleListItem} ${isEditing ? styles.itemEditing : ''}`}
                 >
                   <div className={styles.thumbnailWrapper}>
-                    <img src={art.coverImage} alt={art.title} className={styles.thumbnail} />
+                    <img src={art.cover_image} alt={art.title} className={styles.thumbnail} />
                   </div>
                   <div className={styles.itemInfo}>
                     <h3 className={styles.itemTitle}>{art.title}</h3>
-                    <p className={styles.itemMeta}>{art.date} • {art.readingTime}</p>
+                    <p className={styles.itemMeta}>{formattedDate} • {art.reading_time}</p>
                   </div>
                   <div className={styles.itemActions}>
                     <button 
@@ -175,7 +225,7 @@ export default function AdminBlogPage() {
         <div className={styles.editorSection}>
           <div className={styles.editorHeader}>
             <h2>{editingId ? 'Edit Article' : 'Write New Article'}</h2>
-            <p>{editingId ? `Article ID: ${editingId}` : 'Share a styling guide or fashion news'}</p>
+            <p>{editingId ? `Article ID: ${editingId.substring(0,8)}...` : 'Share a styling guide or fashion news'}</p>
           </div>
 
           <form onSubmit={handleSubmit} className={styles.form}>
@@ -199,8 +249,8 @@ export default function AdminBlogPage() {
               </label>
               <input 
                 type="text"
-                value={form.coverImage}
-                onChange={(e) => setForm({ ...form, coverImage: e.target.value })}
+                value={form.cover_image}
+                onChange={(e) => setForm({ ...form, cover_image: e.target.value })}
                 required
                 placeholder="https://images.unsplash.com/photo-..."
                 className={styles.input}
@@ -214,8 +264,8 @@ export default function AdminBlogPage() {
                 </label>
                 <input 
                   type="text"
-                  value={form.readingTime}
-                  onChange={(e) => setForm({ ...form, readingTime: e.target.value })}
+                  value={form.reading_time}
+                  onChange={(e) => setForm({ ...form, reading_time: e.target.value })}
                   required
                   placeholder="e.g. 4 min read"
                   className={styles.input}
@@ -228,9 +278,9 @@ export default function AdminBlogPage() {
                 </label>
                 <input 
                   type="text"
-                  value={form.link}
-                  onChange={(e) => setForm({ ...form, link: e.target.value })}
-                  placeholder="e.g. /c/womenswear"
+                  value={form.related_link}
+                  onChange={(e) => setForm({ ...form, related_link: e.target.value })}
+                  placeholder="e.g. /c/women"
                   className={styles.input}
                 />
               </div>

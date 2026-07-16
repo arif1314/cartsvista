@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Calendar, ChevronRight, Send, Clock, User, AlertCircle, RefreshCw } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import styles from './page.module.css';
 
 export default function CustomerSupportPage() {
@@ -9,21 +10,40 @@ export default function CustomerSupportPage() {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [user, setUser] = useState(null);
   const chatEndRef = useRef(null);
 
   const fetchTickets = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
-      const response = await fetch('/api/tickets?userId=customer_shahria');
-      const data = await response.json();
-      // Sort newest first
-      data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      setTickets(data);
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
       
-      // Update currently active/selected ticket details if open
-      if (selectedTicket) {
-        const updated = data.find(t => t.id === selectedTicket.id);
-        if (updated) setSelectedTicket(updated);
+      if (user) {
+        setUser(user);
+        const { data } = await supabase
+          .from('support_tickets')
+          .select(`
+            *,
+            ticket_replies (*)
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (data) {
+          // Sort replies inside each ticket
+          const processedTickets = data.map(ticket => ({
+            ...ticket,
+            ticket_replies: ticket.ticket_replies?.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+          }));
+          
+          setTickets(processedTickets);
+          
+          if (selectedTicket) {
+            const updated = processedTickets.find(t => t.id === selectedTicket.id);
+            if (updated) setSelectedTicket(updated);
+          }
+        }
       }
     } catch (e) {
       console.error("Error fetching support tickets:", e);
@@ -36,7 +56,6 @@ export default function CustomerSupportPage() {
     fetchTickets();
   }, []);
 
-  // Scroll to bottom of chat when a ticket is opened or message added
   useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -45,30 +64,33 @@ export default function CustomerSupportPage() {
 
   const handleSendReply = async (e) => {
     e.preventDefault();
-    if (!replyText.trim() || !selectedTicket) return;
+    if (!replyText.trim() || !selectedTicket || !user) return;
     
     setIsSending(true);
     try {
-      const response = await fetch('/api/tickets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'reply',
-          ticketId: selectedTicket.id,
-          replyMessage: replyText,
-          author: 'Customer' // Sender ID
-        }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        setReplyText('');
-        // Refresh ticket list
-        await fetchTickets(false);
-      } else {
-        alert("Failed to send reply. Please try again.");
+      const supabase = createClient();
+      
+      // 1. Insert reply
+      const { error: replyError } = await supabase
+        .from('ticket_replies')
+        .insert({
+          ticket_id: selectedTicket.id,
+          author: 'Customer',
+          message: replyText
+        });
+
+      if (replyError) throw replyError;
+
+      // 2. Update ticket status to Open if it was Replied (by admin)
+      if (selectedTicket.status !== 'Closed') {
+        await supabase
+          .from('support_tickets')
+          .update({ status: 'Open', updated_at: new Date().toISOString() })
+          .eq('id', selectedTicket.id);
       }
+
+      setReplyText('');
+      await fetchTickets(false);
     } catch (err) {
       console.error(err);
       alert("Failed to send reply due to a connection issue.");
@@ -78,15 +100,16 @@ export default function CustomerSupportPage() {
   };
 
   const getStatusClass = (status) => {
-    switch (status) {
-      case 'Open': return styles.statusOpen;
-      case 'Replied': return styles.statusReplied;
-      case 'Closed': return styles.statusClosed;
+    switch (status?.toLowerCase()) {
+      case 'open': return styles.statusOpen;
+      case 'replied': return styles.statusReplied;
+      case 'closed': return styles.statusClosed;
       default: return '';
     }
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return '';
     const d = new Date(dateString);
     return d.toLocaleDateString('en-US', { 
       year: 'numeric', 
@@ -143,7 +166,7 @@ export default function CustomerSupportPage() {
                 <h4 className={styles.ticketSubject}>{ticket.subject}</h4>
                 <div className={styles.ticketCardFooter}>
                   <Calendar size={12} />
-                  <span>{formatDate(ticket.createdAt)}</span>
+                  <span>{formatDate(ticket.created_at)}</span>
                   <ChevronRight size={16} className={styles.chevron} />
                 </div>
               </div>
@@ -157,7 +180,7 @@ export default function CustomerSupportPage() {
                 <div className={styles.detailsHeader}>
                   <div>
                     <h3>{selectedTicket.subject}</h3>
-                    <p className={styles.ticketMeta}>Ticket ID: {selectedTicket.id} | Created: {formatDate(selectedTicket.createdAt)}</p>
+                    <p className={styles.ticketMeta}>Ticket ID: {selectedTicket.id} | Created: {formatDate(selectedTicket.created_at)}</p>
                   </div>
                   <span className={`${styles.statusBadge} ${getStatusClass(selectedTicket.status)}`}>
                     {selectedTicket.status}
@@ -170,7 +193,7 @@ export default function CustomerSupportPage() {
                   <div className={`${styles.chatMessage} ${styles.customerMsg}`}>
                     <div className={styles.msgHeader}>
                       <span className={styles.senderName}>You</span>
-                      <span className={styles.msgTime}>{formatDate(selectedTicket.createdAt)}</span>
+                      <span className={styles.msgTime}>{formatDate(selectedTicket.created_at)}</span>
                     </div>
                     <div className={styles.msgBody}>
                       <p>{selectedTicket.message}</p>
@@ -178,7 +201,7 @@ export default function CustomerSupportPage() {
                   </div>
 
                   {/* Replies */}
-                  {selectedTicket.replies && selectedTicket.replies.map((reply, index) => {
+                  {selectedTicket.ticket_replies?.map((reply, index) => {
                     const isAdmin = reply.author === 'Admin';
                     return (
                       <div 
@@ -189,7 +212,7 @@ export default function CustomerSupportPage() {
                           <span className={styles.senderName}>
                             {isAdmin ? 'Styling Concierge (Admin)' : 'You'}
                           </span>
-                          <span className={styles.msgTime}>{formatDate(reply.createdAt)}</span>
+                          <span className={styles.msgTime}>{formatDate(reply.created_at)}</span>
                         </div>
                         <div className={styles.msgBody}>
                           <p>{reply.message}</p>
@@ -201,7 +224,7 @@ export default function CustomerSupportPage() {
                 </div>
 
                 {/* Send Reply Input */}
-                {selectedTicket.status !== 'Closed' ? (
+                {selectedTicket.status?.toLowerCase() !== 'closed' ? (
                   <form className={styles.replyForm} onSubmit={handleSendReply}>
                     <textarea 
                       placeholder="Write a message back to our styling concierge..."

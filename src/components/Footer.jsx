@@ -28,6 +28,7 @@ export default function Footer() {
         { label: "Size Guide", href: "/pages/size-guide" }, 
         { label: "Exchange & Refund", href: "/pages/exchange-refund" }, 
         { label: "Shipping Policy", href: "/pages/shipping-policy" }, 
+        { label: "Payment Policy", href: "/pages/payment-policy" },
         { label: "Loyalty Program", href: "/pages/loyalty-program" },
         { label: "Privacy Policy", href: "/pages/privacy-policy" }
       ] 
@@ -59,9 +60,7 @@ export default function Footer() {
               A sanctuary of refined taste, blending timeless heritage with cutting-edge modern tailoring. Every collection is an immersive sensory journey through signature craftsmanship.
             </p>
             <div className={styles.socialLinks}>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className={styles.socialLink}>FB</a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className={styles.socialLink}>IG</a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className={styles.socialLink}>TW</a>
+              <a href="https://www.facebook.com/CartsVista" target="_blank" rel="noopener noreferrer" className={styles.socialLink}>FB</a>
             </div>
           </div>
 

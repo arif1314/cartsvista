@@ -1,9 +1,7 @@
 "use client";
 import { use, useState, useEffect } from 'react';
-import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import { Filter, ChevronDown } from 'lucide-react';
-import { supabase } from '@/utils/supabaseClient';
-import { mockProducts } from '@/utils/mockData';
 import ProductCard from '@/components/ProductCard';
 import { useCategory } from '@/context/CategoryContext';
 import styles from './page.module.css';
@@ -29,30 +27,19 @@ export default function CategoryPage({ params }) {
   useEffect(() => {
     async function fetchProducts() {
       setIsLoading(true);
-      const catName = categoryStr.charAt(0).toUpperCase() + categoryStr.slice(1).toLowerCase();
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .ilike('category', `%${catName}%`);
-      
-      if (!error && data && data.length > 0) {
-        // Map DB format to UI format
-        const formattedData = data.map(p => ({
-          ...p,
-          category: p.subcategory || p.category, 
-          image: p.images && p.images.length > 0 ? p.images[0] : 'https://placehold.co/600x800?text=No+Image'
-        }));
-        setProducts(formattedData);
-        setFilteredProducts(formattedData);
-      } else {
-        // Fallback to mock data if DB fails or empty
-        const categoryLower = categoryStr.toLowerCase();
-        const fallback = categoryLower.includes('women') ? mockProducts.womenswear : 
-                         categoryLower.includes('men') ? mockProducts.menswear : [];
-        setProducts(fallback);
-        setFilteredProducts(fallback);
+      try {
+        const categoryQuery = categoryStr === 'all' ? '' : `&category=${encodeURIComponent(categoryStr)}`;
+        const response = await fetch(`/api/products?limit=48${categoryQuery}`);
+        const data = await response.json();
+        const nextProducts = response.ok && data.success ? data.products || [] : [];
+        setProducts(nextProducts);
+        setFilteredProducts(nextProducts);
+      } catch {
+        setProducts([]);
+        setFilteredProducts([]);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }
     fetchProducts();
   }, [categoryStr]);
@@ -82,13 +69,12 @@ export default function CategoryPage({ params }) {
       });
     }
 
-    // 3. Filter by Size (mocked size lists since mockProducts doesn't store sizes)
+    // 3. Filter by Size
     if (selectedSizes.length > 0) {
       result = result.filter(product => {
-        // Mocking sizing assignments: even product IDs get M, L, XL; odd get S, M, L
-        const productSizes = product.id.endsWith('2') || product.id.endsWith('4')
+        const productSizes = product.sizes || (product.id.toString().endsWith('2') || product.id.toString().endsWith('4')
           ? ['M', 'L', 'XL']
-          : ['S', 'M', 'L'];
+          : ['S', 'M', 'L']);
         return selectedSizes.some(size => productSizes.includes(size));
       });
     }
@@ -122,7 +108,7 @@ export default function CategoryPage({ params }) {
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
         <div className={styles.breadcrumb}>
-          <a href="/">Home</a> <span className={styles.separator}>/</span> {title}
+          <Link href="/">Home</Link> <span className={styles.separator}>/</span> {title}
         </div>
         <h1 className={styles.pageTitle}>{title}</h1>
       </div>
@@ -182,7 +168,7 @@ export default function CategoryPage({ params }) {
                         setSelectedPriceRanges(selectedPriceRanges.filter(r => r !== 'under5'));
                       }
                     }}
-                  /> Under BDT 5,000
+                  /> Under $5,000
                 </label>
               </li>
               <li>
@@ -197,7 +183,7 @@ export default function CategoryPage({ params }) {
                         setSelectedPriceRanges(selectedPriceRanges.filter(r => r !== '5to10'));
                       }
                     }}
-                  /> BDT 5,000 - 10,000
+                  /> $5,000 - $10,000
                 </label>
               </li>
               <li>
@@ -212,7 +198,7 @@ export default function CategoryPage({ params }) {
                         setSelectedPriceRanges(selectedPriceRanges.filter(r => r !== '10to15'));
                       }
                     }}
-                  /> BDT 10,000 - 15,000
+                  /> $10,000 - $15,000
                 </label>
               </li>
               <li>
@@ -227,7 +213,7 @@ export default function CategoryPage({ params }) {
                         setSelectedPriceRanges(selectedPriceRanges.filter(r => r !== 'over15'));
                       }
                     }}
-                  /> Over BDT 15,000
+                  /> Over $15,000
                 </label>
               </li>
             </ul>
@@ -292,7 +278,9 @@ export default function CategoryPage({ params }) {
 
           <div className={styles.grid}>
             {isLoading ? (
-              <div className={styles.loadingState}>Loading products...</div>
+              <div className={styles.emptyState}>
+                <p>Loading products...</p>
+              </div>
             ) : sortedProducts.length > 0 ? (
               sortedProducts.map(product => (
                 <div key={product.id} className={styles.gridItem}>

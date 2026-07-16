@@ -2,18 +2,18 @@
 import { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ChevronLeft, ShieldCheck, CreditCard, Banknote, Smartphone } from 'lucide-react';
-import { supabase } from '@/utils/supabaseClient';
+import { formatCurrency } from '@/lib/format/currency';
 import styles from './page.module.css';
 
 export default function CheckoutPage() {
-  const { cartItems, cartTotal } = useCart();
+  const router = useRouter();
+  const { cartItems, cartTotal, clearCart } = useCart();
   const [paymentMethod, setPaymentMethod] = useState('cod');
 
-  const shippingCost = 150; // Example shipping cost in BDT
+  const shippingCost = 5;
   const total = cartTotal > 0 ? cartTotal + shippingCost : 0;
-  // Convert BDT to USD (Approximate rate: 1 USD = 110 BDT)
-  const totalUSD = (total / 110).toFixed(2);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,45 +37,34 @@ export default function CheckoutPage() {
       phone: formData.get('phone')
     };
 
-    // 1. Create order
-    const { data: orderData, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        total_amount: total,
-        status: 'pending',
-        shipping_address: shippingAddress,
-        payment_method: paymentMethod
-      })
-      .select()
-      .single();
+    try {
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cartItems,
+          shippingAddress,
+          paymentMethod: paymentMethod === 'card' ? 'stripe' : paymentMethod,
+        }),
+      });
+      const data = await response.json();
 
-    if (orderError) {
-      alert('Failed to place order (DB Error). Details: ' + orderError.message);
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to place order.');
+      }
+
+      clearCart();
+
+      if (data.order?.paymentRedirectUrl) {
+        window.location.href = data.order.paymentRedirectUrl;
+        return;
+      }
+
+      router.push(`/checkout/success?order_id=${data.order.id}`);
+    } catch (error) {
+      alert('Failed to place order. Details: ' + error.message);
       setIsSubmitting(false);
-      return;
     }
-
-    // 2. Create order items
-    // Ensure product_ids match UUID format in DB or handle gracefully if mock items used
-    const orderItemsToInsert = cartItems.map(item => ({
-      order_id: orderData.id,
-      product_id: item.id.length > 10 ? item.id : null, // handle mock short ids temporarily
-      quantity: item.quantity,
-      size: item.size,
-      color: item.color || null,
-      price: item.price
-    }));
-
-    // Filter out items with mock IDs if your DB restricts product_id (which it does: REFERENCES products)
-    // Actually, since mock data ids are 'm1', 'w2', the FK will fail if inserted.
-    const validItems = orderItemsToInsert.filter(i => i.product_id);
-    if (validItems.length > 0) {
-      await supabase.from('order_items').insert(validItems);
-    }
-
-    alert(`Order placed successfully!\nOrder ID: ${orderData.id}\nPayment: ${paymentMethod.toUpperCase()}\nTotal Amount: ৳ ${total} / $ ${totalUSD}`);
-    // Clear cart context here if you have a method for it
-    setIsSubmitting(false);
   };
 
   return (
@@ -214,7 +203,7 @@ export default function CheckoutPage() {
                     <p>Size: {item.size}</p>
                   </div>
                   <div className={styles.itemPrice}>
-                    ৳ {item.price * item.quantity}
+                    {formatCurrency(item.price * item.quantity)}
                   </div>
                 </div>
               )) : (
@@ -225,20 +214,16 @@ export default function CheckoutPage() {
             <div className={styles.totalsSection}>
               <div className={styles.totalRow}>
                 <span>Subtotal</span>
-                <span>৳ {cartTotal}</span>
+                <span>{formatCurrency(cartTotal)}</span>
               </div>
               <div className={styles.totalRow}>
                 <span>Shipping</span>
-                <span>৳ {cartTotal > 0 ? shippingCost : 0}</span>
+                <span>{formatCurrency(cartTotal > 0 ? shippingCost : 0)}</span>
               </div>
               <div className={styles.divider}></div>
               <div className={`${styles.totalRow} ${styles.finalTotal}`}>
-                <span>Total (BDT)</span>
-                <span>৳ {total}</span>
-              </div>
-              <div className={`${styles.totalRow} ${styles.usdTotal}`}>
                 <span>Total (USD)</span>
-                <span>~ $ {totalUSD}</span>
+                <span>{formatCurrency(total)}</span>
               </div>
             </div>
           </div>

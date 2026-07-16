@@ -1,10 +1,10 @@
 "use client";
 import { useState, use, useEffect } from 'react';
 import { notFound } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Maximize2, Ruler, Lock, Share2, MessageCircle, Phone, Mail, Plus } from 'lucide-react';
-import { supabase } from '@/utils/supabaseClient';
-import { mockProducts } from '@/utils/mockData';
+import Link from 'next/link';
+import { ChevronLeft, ChevronRight, Maximize2, Ruler, Lock, Share2, MessageCircle, Phone, Mail, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { formatCurrency } from '@/lib/format/currency';
 import styles from './page.module.css';
 
 export default function ProductPage({ params }) {
@@ -15,28 +15,48 @@ export default function ProductPage({ params }) {
   useEffect(() => {
     async function fetchProduct() {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('id', resolvedParams.id)
-        .single();
-      
-      if (!error && data) {
-        setProduct({
-          ...data,
-          image: data.images && data.images.length > 0 ? data.images[0] : 'https://placehold.co/600x800'
-        });
-      } else {
-        const allProducts = [...mockProducts.menswear, ...mockProducts.womenswear];
-        setProduct(allProducts.find(p => p.id === resolvedParams.id));
+      try {
+        const response = await fetch(`/api/products/${resolvedParams.id}`);
+        const data = await response.json();
+        if (response.ok && data.success) {
+          setProduct(data.product);
+        } else {
+          setProduct(null);
+        }
+      } catch {
+        setProduct(null);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }
     fetchProduct();
   }, [resolvedParams.id]);
 
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [product?.id]);
+
   const { addToCart } = useCart();
   const [selectedSize, setSelectedSize] = useState('');
+  
+  // Gallery State
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const images = product?.images?.length > 0 ? product.images : (product?.image ? [product.image] : ['https://placehold.co/600x800']);
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  // Accordion State
+  const [openAccordion, setOpenAccordion] = useState(null);
+
+  const toggleAccordion = (index) => {
+    setOpenAccordion(openAccordion === index ? null : index);
+  };
   
   // Custom sizes configuration mimicking the provided screenshot structure
   const sizes = [
@@ -55,6 +75,33 @@ export default function ProductPage({ params }) {
     addToCart(product, 1, selectedSize);
   };
 
+  const productUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const shareText = product ? `Take a look at ${product.name} from CartsVista.` : 'Take a look at this CartsVista product.';
+
+  const handleNativeShare = async () => {
+    if (!productUrl) return;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product?.name || 'CartsVista product',
+          text: shareText,
+          url: productUrl,
+        });
+        return;
+      } catch (error) {
+        if (error?.name === 'AbortError') return;
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(productUrl);
+      alert('Product link copied.');
+    } catch {
+      alert(productUrl);
+    }
+  };
+
   if (isLoading) {
     return <div className={styles.pageWrapper} style={{ padding: '4rem', textAlign: 'center' }}>Loading product details...</div>;
   }
@@ -66,25 +113,44 @@ export default function ProductPage({ params }) {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.breadcrumb}>
-        <a href="/">Home</a> <span className={styles.separator}>/</span> {product.name} - {product.id.length > 10 ? product.id.substring(0, 8) : product.id}
+        <Link href="/">Home</Link> <span className={styles.separator}>/</span> {product.name} - {product.id.length > 10 ? product.id.substring(0, 8) : product.id}
       </div>
 
       <div className={styles.productContainer}>
         {/* Left Image Section */}
         <div className={styles.imageGallery}>
           <div className={styles.mainImageWrapper}>
-            <button className={styles.iconBtnLeft}><ChevronLeft size={20} /></button>
-            <button className={styles.iconBtnRight}><ChevronRight size={20} /></button>
+            <button className={styles.iconBtnLeft} onClick={prevImage}><ChevronLeft size={20} /></button>
+            <button className={styles.iconBtnRight} onClick={nextImage}><ChevronRight size={20} /></button>
             <button className={styles.iconBtnFullscreen}><Maximize2 size={16} /></button>
-            <img src={product.image} alt={product.name} className={styles.image} />
+            <img src={images[currentImageIndex]} alt={product.name} className={styles.image} />
           </div>
           
           <div className={styles.imageIndicator}>
-            <span className={styles.imageCount}>1 / 4</span>
+            <span className={styles.imageCount}>{currentImageIndex + 1} / {images.length}</span>
             <div className={styles.progressBar}>
-              <div className={styles.progressFill}></div>
+              <div 
+                className={styles.progressFill} 
+                style={{ width: `${((currentImageIndex + 1) / images.length) * 100}%` }}
+              ></div>
             </div>
           </div>
+
+          {images.length > 1 && (
+            <div className={styles.thumbnailGrid}>
+              {images.map((image, index) => (
+                <button
+                  key={`${image}-${index}`}
+                  type="button"
+                  className={`${styles.thumbnailBtn} ${index === currentImageIndex ? styles.thumbnailActive : ''}`}
+                  onClick={() => setCurrentImageIndex(index)}
+                  aria-label={`View product image ${index + 1}`}
+                >
+                  <img src={image} alt={`${product.name} ${index + 1}`} />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         
         {/* Right Info Section */}
@@ -93,26 +159,31 @@ export default function ProductPage({ params }) {
             <h1 className={styles.title}>{product.name}</h1>
             <p className={styles.productCode}>Product Code: {product.id.length > 8 ? product.id.substring(0,8).toUpperCase() : product.id.toUpperCase()}0905</p>
             
-            <p className={styles.price}>BDT {product.price?.toLocaleString() || product.price}</p>
+            <p className={styles.price}>{formatCurrency(product.price)}</p>
             
             <div className={styles.colorSection}>
               <p className={styles.colorLabel}><strong>Color:</strong> Dark Mauve</p>
               <div className={styles.colorSwatches}>
-                <div className={`${styles.swatch} ${styles.swatchActive}`}>
-                  <img src={product.image} alt="Color 1" />
-                </div>
-                <div className={styles.swatch}>
-                  <img src={product.image} alt="Color 2" />
-                </div>
+                {images.slice(0, 4).map((image, index) => (
+                  <button
+                    key={`${image}-swatch-${index}`}
+                    type="button"
+                    className={`${styles.swatch} ${index === currentImageIndex ? styles.swatchActive : ''}`}
+                    onClick={() => setCurrentImageIndex(index)}
+                    aria-label={`Select image ${index + 1}`}
+                  >
+                    <img src={image} alt={`Preview ${index + 1}`} />
+                  </button>
+                ))}
               </div>
             </div>
 
             <div className={styles.sizeSection}>
               <div className={styles.sizeHeader}>
                 <span>Select Size</span>
-                <button className={styles.sizeGuide}>
+                <Link href="/pages/size-guide" className={styles.sizeGuide}>
                   Size Guide <Ruler size={14} className={styles.rulerIcon} />
-                </button>
+                </Link>
               </div>
               <div className={styles.sizeGrid}>
                 {sizes.map(size => (
@@ -144,10 +215,26 @@ export default function ProductPage({ params }) {
             </button>
             
             <div className={styles.socialShare}>
-              <button><Share2 size={20} strokeWidth={1.5} /></button>
-              <button><MessageCircle size={20} strokeWidth={1.5} /></button>
-              <button><Phone size={20} strokeWidth={1.5} /></button>
-              <button><Mail size={20} strokeWidth={1.5} /></button>
+              <button type="button" onClick={handleNativeShare} aria-label="Share product">
+                <Share2 size={20} strokeWidth={1.5} />
+              </button>
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(`${shareText} ${productUrl}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Share on WhatsApp"
+              >
+                <MessageCircle size={20} strokeWidth={1.5} />
+              </a>
+              <a href="tel:+8801711000000" aria-label="Call CartsVista">
+                <Phone size={20} strokeWidth={1.5} />
+              </a>
+              <a
+                href={`mailto:support@cartsvista.com?subject=${encodeURIComponent(product?.name || 'CartsVista product')}&body=${encodeURIComponent(`${shareText}\n\n${productUrl}`)}`}
+                aria-label="Share by email"
+              >
+                <Mail size={20} strokeWidth={1.5} />
+              </a>
             </div>
             
             <div className={styles.shortDescription}>
@@ -156,14 +243,29 @@ export default function ProductPage({ params }) {
             </div>
             
             <div className={styles.accordions}>
-              <div className={styles.accordion}>
-                <h3>Details <Plus size={16} /></h3>
+              <div className={styles.accordion} onClick={() => toggleAccordion(1)}>
+                <h3>Details {openAccordion === 1 ? <Minus size={16} /> : <Plus size={16} />}</h3>
+                {openAccordion === 1 && (
+                  <div className={styles.accordionContent}>
+                    <p>{product.description || "Premium quality fabric, designed for comfort and style."}</p>
+                  </div>
+                )}
               </div>
-              <div className={styles.accordion}>
-                <h3>Materials <Plus size={16} /></h3>
+              <div className={styles.accordion} onClick={() => toggleAccordion(2)}>
+                <h3>Materials {openAccordion === 2 ? <Minus size={16} /> : <Plus size={16} />}</h3>
+                {openAccordion === 2 && (
+                  <div className={styles.accordionContent}>
+                    <p>{product.materials || "100% Cotton / Premium Blend."}</p>
+                  </div>
+                )}
               </div>
-              <div className={styles.accordion}>
-                <h3>Care <Plus size={16} /></h3>
+              <div className={styles.accordion} onClick={() => toggleAccordion(3)}>
+                <h3>Care {openAccordion === 3 ? <Minus size={16} /> : <Plus size={16} />}</h3>
+                {openAccordion === 3 && (
+                  <div className={styles.accordionContent}>
+                    <p>Machine wash cold, do not bleach, tumble dry low.</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

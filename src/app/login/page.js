@@ -1,29 +1,139 @@
 "use client";
-import { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Eye, EyeOff, AlertCircle, CheckCircle, Loader } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import styles from './page.module.css';
 
-export default function LoginPage() {
+function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
 
-  const toggleAuthMode = () => setIsLogin(!isLogin);
-  const togglePasswordVisibility = () => setShowPassword(!showPassword);
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+  });
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    const message = searchParams.get('message');
+    if (message) setError(message);
+  }, [searchParams]);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError('');
+  };
+
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // This will be connected to Supabase Auth in the future
-    alert("Authentication functionality will be connected to our Supabase Database soon!");
+    setIsLoading(true);
+    setError('');
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: formData.email,
+      password: formData.password,
+    });
+
+    if (error) {
+      setError(error.message === 'Invalid login credentials'
+        ? 'The email or password is incorrect. Please try again.'
+        : error.message);
+      setIsLoading(false);
+      return;
+    }
+
+    // Redirect to admin or account based on role
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
+    const redirect = searchParams.get('redirect');
+
+    if (redirect) {
+      router.push(redirect);
+    } else if (isAdmin) {
+      router.push('/admin');
+    } else {
+      router.push('/account');
+    }
+    router.refresh();
+  };
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      setIsLoading(false);
+      return;
+    }
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        data: {
+          full_name: formData.fullName,
+        },
+      },
+    });
+
+    if (error) {
+      setError(error.message === 'User already registered'
+        ? 'This email is already registered. Please sign in.'
+        : error.message);
+      setIsLoading(false);
+      return;
+    }
+
+    setSuccess('Account created successfully. Please check your email and verify your account.');
+    setIsLoading(false);
+    setFormData({ fullName: '', email: '', password: '' });
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+      redirectTo: `${window.location.origin}/account/settings?mode=reset`,
+    });
+
+    if (error) {
+      setError(error.message);
+      setIsLoading(false);
+      return;
+    }
+
+    setSuccess('A password reset link has been sent to your email.');
+    setIsLoading(false);
+    setIsForgotPassword(false);
   };
 
   return (
     <div className={styles.authContainer}>
       <div className={styles.imageSection}>
-        {/* Placeholder image for luxury brand feel */}
-        <img 
-          src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop" 
-          alt="Brand Aesthetics" 
-          className={styles.bgImage} 
+        <img
+          src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop"
+          alt="Brand Aesthetics"
+          className={styles.bgImage}
         />
         <div className={styles.imageOverlay}>
           <h2>CartsVista</h2>
@@ -34,59 +144,171 @@ export default function LoginPage() {
       <div className={styles.formSection}>
         <div className={styles.formWrapper}>
           <div className={styles.formHeader}>
-            <h1>{isLogin ? 'Welcome Back' : 'Create an Account'}</h1>
-            <p>{isLogin ? 'Sign in to access your personalized experience.' : 'Join us to experience premium lifestyle and fashion.'}</p>
-          </div>
-
-          <form className={styles.form} onSubmit={handleSubmit}>
-            {!isLogin && (
-              <div className={styles.inputGroup}>
-                <label htmlFor="name">Full Name</label>
-                <input type="text" id="name" placeholder="John Doe" required />
-              </div>
-            )}
-            
-            <div className={styles.inputGroup}>
-              <label htmlFor="email">Email Address</label>
-              <input type="email" id="email" placeholder="john@example.com" required />
-            </div>
-            
-            <div className={styles.inputGroup}>
-              <label htmlFor="password">Password</label>
-              <div className={styles.passwordWrapper}>
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  id="password" 
-                  placeholder="••••••••" 
-                  required 
-                />
-                <button type="button" onClick={togglePasswordVisibility} className={styles.eyeBtn}>
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-
-            {isLogin && (
-              <div className={styles.forgotPassword}>
-                <a href="#">Forgot your password?</a>
-              </div>
-            )}
-
-            <button type="submit" className={styles.submitBtn}>
-              {isLogin ? 'SIGN IN' : 'CREATE ACCOUNT'}
-            </button>
-          </form>
-
-          <div className={styles.toggleMode}>
+            <h1>
+              {isForgotPassword
+                ? 'Reset Password'
+                : isLogin
+                ? 'Welcome Back'
+                : 'Create Account'}
+            </h1>
             <p>
-              {isLogin ? "Don't have an account?" : "Already have an account?"}
-              <button onClick={toggleAuthMode} className={styles.toggleBtn}>
-                {isLogin ? 'Register now' : 'Sign in'}
-              </button>
+              {isForgotPassword
+                ? 'Enter your email to receive a password reset link.'
+                : isLogin
+                ? 'Sign in to access your personalized experience.'
+                : 'Join us to experience premium lifestyle and fashion.'}
             </p>
           </div>
+
+          {error && (
+            <div className={styles.alertError}>
+              <AlertCircle size={16} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {success && (
+            <div className={styles.alertSuccess}>
+              <CheckCircle size={16} />
+              <span>{success}</span>
+            </div>
+          )}
+
+          {isForgotPassword ? (
+            <form className={styles.form} onSubmit={handleForgotPassword}>
+              <div className={styles.inputGroup}>
+                <label htmlFor="email">Email Address</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder="john@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <button type="submit" className={styles.submitBtn} disabled={isLoading}>
+                {isLoading ? <Loader size={18} className={styles.spinner} /> : 'Send Reset Link'}
+              </button>
+
+              <button
+                type="button"
+                className={styles.toggleBtn}
+                onClick={() => { setIsForgotPassword(false); setError(''); setSuccess(''); }}
+              >
+                ← Back to Sign In
+              </button>
+            </form>
+          ) : (
+            <form
+              className={styles.form}
+              onSubmit={isLogin ? handleLogin : handleRegister}
+            >
+              {!isLogin && (
+                <div className={styles.inputGroup}>
+                  <label htmlFor="fullName">Full Name</label>
+                  <input
+                    type="text"
+                    id="fullName"
+                    name="fullName"
+                    placeholder="John Doe"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+              )}
+
+              <div className={styles.inputGroup}>
+                <label htmlFor="email">Email Address</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder="john@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label htmlFor="password">Password</label>
+                <div className={styles.passwordWrapper}>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    id="password"
+                    name="password"
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className={styles.eyeBtn}
+                    aria-label="Toggle password visibility"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {isLogin && (
+                <div className={styles.forgotPassword}>
+                  <button
+                    type="button"
+                    onClick={() => { setIsForgotPassword(true); setError(''); setSuccess(''); }}
+                    className={styles.forgotBtn}
+                  >
+                    Forgot your password?
+                  </button>
+                </div>
+              )}
+
+              <button type="submit" className={styles.submitBtn} disabled={isLoading}>
+                {isLoading ? (
+                  <Loader size={18} className={styles.spinner} />
+                ) : isLogin ? (
+                  'SIGN IN'
+                ) : (
+                  'CREATE ACCOUNT'
+                )}
+              </button>
+            </form>
+          )}
+
+          {!isForgotPassword && (
+            <div className={styles.toggleMode}>
+              <p>
+                {isLogin ? "Don't have an account?" : 'Already have an account?'}
+                <button
+                  onClick={() => {
+                    setIsLogin(!isLogin);
+                    setError('');
+                    setSuccess('');
+                  }}
+                  className={styles.toggleBtn}
+                >
+                  {isLogin ? 'Register now' : 'Sign in'}
+                </button>
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -2,8 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, Edit2, Trash2, Search } from 'lucide-react';
-import { supabase } from '@/utils/supabaseClient';
-import { mockProducts } from '@/utils/mockData';
+import { formatCurrency } from '@/lib/format/currency';
 import styles from './page.module.css';
 
 export default function AdminProducts() {
@@ -18,33 +17,32 @@ export default function AdminProducts() {
 
   async function fetchProducts() {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (!error && data && data.length > 0) {
-      const formattedData = data.map(p => ({
-        ...p,
-        category: p.subcategory || p.category,
-        image: p.images && p.images.length > 0 ? p.images[0] : 'https://placehold.co/600x800?text=No+Image'
-      }));
-      setProducts(formattedData);
-    } else {
-      const allMock = [...mockProducts.menswear, ...mockProducts.womenswear];
-      setProducts(allMock);
+    try {
+      const response = await fetch('/api/admin/products');
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Unable to load products.');
+      }
+      setProducts(data.products || []);
+    } catch (error) {
+      alert(error.message);
+      setProducts([]);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }
 
   const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this product?')) {
-      const { error } = await supabase.from('products').delete().eq('id', id);
-      if (!error) {
+      try {
+        const response = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Unable to archive product.');
+        }
         setProducts(products.filter(p => p.id !== id));
-      } else {
-        alert('Failed to delete product. Using mock data, it cannot be deleted from DB.');
-        setProducts(products.filter(p => p.id !== id));
+      } catch (error) {
+        alert('Failed to archive product. Details: ' + error.message);
       }
     }
   };
@@ -118,13 +116,15 @@ export default function AdminProducts() {
                       </div>
                     </td>
                     <td><span className={styles.categoryBadge}>{product.category}</span></td>
-                    <td className={styles.price}>BDT {new Intl.NumberFormat('en-IN').format(product.price)}</td>
+                    <td className={styles.price}>{formatCurrency(product.price)}</td>
                     <td>
                       <span className={`${styles.stockBadge} ${styles.inStock}`}>In Stock</span>
                     </td>
                     <td>
                       <div className={styles.actions}>
-                        <button className={styles.actionBtn} title="Edit"><Edit2 size={16} /></button>
+                        <Link href={`/admin/products/${product.id}/edit`} className={styles.actionBtn} title="Edit">
+                          <Edit2 size={16} />
+                        </Link>
                         <button 
                           className={`${styles.actionBtn} ${styles.deleteBtn}`} 
                           title="Delete"

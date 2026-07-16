@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { MessageSquare, Phone, MessageCircle, AlertCircle, ChevronUp, X, MessageSquareQuote, Send, Loader2 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import styles from './SupportWidget.module.css';
 
 export default function SupportWidget() {
@@ -47,26 +48,33 @@ export default function SupportWidget() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      const supabase = createClient();
+      
+      // Get current logged in user if any
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        window.location.href = '/contact';
+        return;
+      }
+
       const response = await fetch('/api/tickets', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: 'customer_shahria', // Default logged-in user
-          userName: 'Shahria Arif',
-          userEmail: 'shahria.arif@example.com',
-          subject: subject,
-          message: message,
+          subject,
+          message,
+          source: 'support_widget',
         }),
       });
       const data = await response.json();
-      if (data.success) {
+
+      if (response.ok && data.success && data.ticket) {
         setTicketId(data.ticket.id);
         setSubmitSuccess(true);
         setSubject('');
         setMessage('');
       } else {
+        console.error(data);
         alert("Failed to submit support ticket. Please try again.");
       }
     } catch (err) {

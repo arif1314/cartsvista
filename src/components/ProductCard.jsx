@@ -2,13 +2,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ShoppingBag, Heart } from 'lucide-react';
 import { useWishlist } from '@/context/WishlistContext';
+import { formatCurrency } from '@/lib/format/currency';
 import styles from './ProductCard.module.css';
 
 export default function ProductCard({ product }) {
   const { toggleWishlist, isInWishlist } = useWishlist();
   const isSaved = isInWishlist(product.id);
-  // Format price with commas
-  const formattedPrice = new Intl.NumberFormat('en-IN').format(product.price);
 
   return (
     <div className={styles.card}>
@@ -38,7 +37,7 @@ export default function ProductCard({ product }) {
         <Link href={`/product/${product.id}`}>
           <h3 className={styles.title}>{product.name}</h3>
         </Link>
-        <p className={styles.price}>BDT {formattedPrice}</p>
+        <p className={styles.price}>{formatCurrency(product.price)}</p>
       </div>
     </div>
   );

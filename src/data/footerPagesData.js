@@ -2,19 +2,17 @@ export const footerPagesData = {
   "shipping-policy": {
     title: "Shipping Policy",
     content: `
-      <h2>Domestic Delivery (Bangladesh)</h2>
-      <p>At CartsVista, we strive to deliver your premium apparel with the utmost care and speed. Standard delivery within Dhaka takes 1-2 business days, while deliveries outside Dhaka may take 3-5 business days.</p>
+      <h2>Delivery Coverage</h2>
+      <p>At CartsVista, we prepare each order with care and ship eligible products to supported delivery locations shown at checkout. Delivery timing depends on the destination, selected shipping method, and courier availability.</p>
       <ul>
-        <li><strong>Inside Dhaka:</strong> BDT 80 (Standard), BDT 150 (Express Same-Day)</li>
-        <li><strong>Outside Dhaka:</strong> BDT 150 (Standard via Courier)</li>
+        <li><strong>Standard Shipping:</strong> calculated at checkout based on destination and order value.</li>
+        <li><strong>Free Shipping:</strong> automatically applied to eligible orders over $100 unless excluded by destination or product type.</li>
       </ul>
-      <p>Free standard shipping is automatically applied to orders over BDT 10,000.</p>
-      
       <h2>International Delivery</h2>
-      <p>We proudly ship CartsVista worldwide. International shipping rates are calculated at checkout based on DHL/FedEx standard rates. Please allow 7-14 business days for global deliveries. Please note that customs duties and taxes are the responsibility of the recipient.</p>
+      <p>International shipping availability and rates are calculated at checkout. Customs duties, taxes, and import fees may be charged by the destination country and are the responsibility of the recipient.</p>
       
       <h2>Order Tracking</h2>
-      <p>Once your order is dispatched, you will receive an exclusive tracking link via email and SMS, allowing you to trace your garment's journey to your doorstep.</p>
+      <p>When tracking is available, we will send order updates by email or through your account dashboard.</p>
     `
   },
   "terms-conditions": {
@@ -55,11 +53,11 @@ export const footerPagesData = {
       <h2>Secure Transactions</h2>
       <p>CartsVista offers a variety of secure payment gateways for your convenience:</p>
       <ul>
-        <li><strong>Cash on Delivery (COD):</strong> Available for all locations within Bangladesh.</li>
+        <li><strong>Cash on Delivery (COD):</strong> Available only where offered at checkout.</li>
         <li><strong>Mobile Banking:</strong> We accept seamless payments via bKash and Nagad.</li>
-        <li><strong>Credit/Debit Cards:</strong> We accept all major global cards (Visa, MasterCard, Amex) through our secure payment gateway.</li>
+        <li><strong>Credit/Debit Cards:</strong> We accept supported cards through Stripe Checkout when enabled.</li>
       </ul>
-      <p>For international orders, all transactions will be processed in USD at the prevailing exchange rate.</p>
+      <p>Store prices are shown in USD. We do not store full card numbers on our servers.</p>
     `
   },
   "gift-card-policy": {
@@ -80,16 +78,16 @@ export const footerPagesData = {
     title: "Exchange & Refund",
     content: `
       <h2>Our Commitment to Perfection</h2>
-      <p>If your CartsVista garment does not fit perfectly or meet your expectations, we offer a hassle-free exchange within 7 days of delivery.</p>
+      <p>If your CartsVista item does not fit or arrives with an issue, contact us within 7 days of delivery so our support team can review your request.</p>
       
       <h2>Exchange Conditions</h2>
       <ul>
-        <li>The garment must be unworn, unwashed, and in its original pristine condition with all tags attached.</li>
-        <li>Perfumes and customized tailored items are strictly non-exchangeable and non-refundable.</li>
+        <li>The item must be unworn, unused, unwashed, and returned with original tags and packaging where applicable.</li>
+        <li>Fragrance, personal-care products, final-sale items, and customized items may be ineligible for return unless defective or required by law.</li>
       </ul>
       
       <h2>Refund Process</h2>
-      <p>We currently do not offer direct cash refunds. However, if an item is defective upon arrival, we will issue a full store credit or a direct exchange for a flawless piece.</p>
+      <p>Approved refunds are returned to the original payment method where possible. If a product is defective, damaged, or incorrect, we will offer a replacement, exchange, store credit, or refund after review.</p>
     `
   },
   "size-guide": {
@@ -121,7 +119,7 @@ export const footerPagesData = {
       <p>Welcome to CartsVista Elite, an exclusive tier for our most valued patrons. Earn points with every purchase and unlock a world of bespoke privileges.</p>
       
       <h2>How it Works</h2>
-      <p>For every BDT 100 spent, you earn 1 Elite Point. Accumulate points to unlock:</p>
+      <p>For every $10 spent, you earn 1 Elite Point. Accumulate points to unlock:</p>
       <ul>
         <li><strong>Silver Tier (1000 pts):</strong> Early access to new collections.</li>
         <li><strong>Gold Tier (5000 pts):</strong> Free nationwide shipping and birthday gifts.</li>

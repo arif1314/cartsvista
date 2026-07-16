@@ -1,0 +1,60 @@
+export function orderToClient(order) {
+  const items = order.order_items || [];
+
+  return {
+    id: order.id,
+    date: order.created_at,
+    total: Number(order.total_amount || 0),
+    subtotal: Number(order.subtotal_amount || 0),
+    shipping: Number(order.shipping_amount || 0),
+    discount: Number(order.discount_amount || 0),
+    tax: Number(order.tax_amount || 0),
+    status: order.status || 'pending',
+    paymentStatus: order.payment_status || 'unpaid',
+    paymentMethod: order.payment_method || '',
+    shippingAddress: order.shipping_address || {},
+    customerEmail: order.customer_email || '',
+    payments: (order.payments || []).map((payment) => ({
+      id: payment.id,
+      provider: payment.provider,
+      providerReference: payment.provider_reference || '',
+      amount: Number(payment.amount || 0),
+      status: payment.status,
+      createdAt: payment.created_at,
+    })),
+    notifications: (order.notification_logs || []).map((notification) => ({
+      id: notification.id,
+      channel: notification.channel,
+      recipient: notification.recipient || '',
+      subject: notification.subject || '',
+      message: notification.message,
+      status: notification.status,
+      createdAt: notification.created_at,
+    })),
+    requests: (order.order_requests || []).map((request) => ({
+      id: request.id,
+      type: request.request_type,
+      reason: request.reason || '',
+      status: request.status,
+      createdAt: request.created_at,
+    })),
+    timeline: (order.order_status_events || []).map((event) => ({
+      id: event.id,
+      type: event.event_type,
+      fromStatus: event.from_status || '',
+      toStatus: event.to_status || '',
+      note: event.note || '',
+      metadata: event.metadata || {},
+      createdAt: event.created_at,
+    })),
+    items: items.map((item) => ({
+      id: item.id,
+      name: item.product_name || 'Product',
+      size: item.size || '',
+      color: item.color || '',
+      qty: item.quantity,
+      price: Number(item.price || 0),
+      image: item.products?.images?.[0] || 'https://placehold.co/200x260?text=Product',
+    })),
+  };
+}

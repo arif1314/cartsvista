@@ -1,8 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import { X, Search } from 'lucide-react';
-import { supabase } from '@/utils/supabaseClient';
-import { mockProducts } from '@/utils/mockData';
+import { formatCurrency } from '@/lib/format/currency';
 import Link from 'next/link';
 import styles from './SearchModal.module.css';
 
@@ -31,28 +30,15 @@ export default function SearchModal({ isOpen, onClose }) {
     if (query.trim().length > 1) {
       setIsLoading(true);
       debounceTimer = setTimeout(async () => {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .or(`name.ilike.%${query}%,category.ilike.%${query}%`);
-        
-        if (!error && data) {
-          const formattedData = data.map(p => ({
-            ...p,
-            category: p.subcategory || p.category,
-            image: p.images && p.images.length > 0 ? p.images[0] : 'https://placehold.co/600x800?text=No+Image'
-          }));
-          setResults(formattedData);
-        } else {
-          // Fallback to mock data
-          const allProducts = [...mockProducts.menswear, ...mockProducts.womenswear];
-          const filtered = allProducts.filter(p => 
-            p.name.toLowerCase().includes(query.toLowerCase()) || 
-            p.category.toLowerCase().includes(query.toLowerCase())
-          );
-          setResults(filtered);
+        try {
+          const response = await fetch(`/api/products?q=${encodeURIComponent(query)}&limit=12`);
+          const data = await response.json();
+          setResults(response.ok && data.success ? data.products || [] : []);
+        } catch {
+          setResults([]);
+        } finally {
+          setIsLoading(false);
         }
-        setIsLoading(false);
       }, 300);
     } else {
       setResults([]);
@@ -96,7 +82,7 @@ export default function SearchModal({ isOpen, onClose }) {
                     <img src={product.image} alt={product.name} />
                     <div className={styles.resultInfo}>
                       <h4>{product.name}</h4>
-                      <p>BDT {new Intl.NumberFormat('en-IN').format(product.price)}</p>
+                      <p>{formatCurrency(product.price)}</p>
                     </div>
                   </Link>
                 ))}

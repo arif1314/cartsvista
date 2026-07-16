@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
-import { MessageSquare, Calendar, ChevronRight, Send, Clock, User, Mail, ShieldAlert, CheckCircle, RefreshCw } from 'lucide-react';
+import { MessageSquare, Calendar, ChevronRight, Send, User, Mail, ShieldAlert, CheckCircle, RefreshCw } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 import styles from './page.module.css';
 
 export default function AdminSupportPage() {
@@ -15,19 +16,31 @@ export default function AdminSupportPage() {
   const fetchTickets = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
-      const response = await fetch('/api/tickets');
-      const data = await response.json();
-      // Sort newest first
-      data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      setTickets(data);
-      
-      // Update currently active/selected ticket details if open
-      if (selectedTicket) {
-        const updated = data.find(t => t.id === selectedTicket.id);
-        if (updated) setSelectedTicket(updated);
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .select(`
+          *,
+          ticket_replies (*)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        // Sort replies inside each ticket
+        const processedTickets = data.map(ticket => ({
+          ...ticket,
+          ticket_replies: ticket.ticket_replies?.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        }));
+        
+        setTickets(processedTickets);
+        
+        if (selectedTicket) {
+          const updated = processedTickets.find(t => t.id === selectedTicket.id);
+          if (updated) setSelectedTicket(updated);
+        }
       }
     } catch (e) {
-      console.error("Error fetching admin support tickets:", e);
+      console.error("Error fetching support tickets:", e);
     } finally {
       if (showLoading) setLoading(false);
     }
@@ -37,7 +50,6 @@ export default function AdminSupportPage() {
     fetchTickets();
   }, []);
 
-  // Scroll to bottom of chat when a ticket is opened or message added
   useEffect(() => {
     if (chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -50,29 +62,31 @@ export default function AdminSupportPage() {
     
     setIsSending(true);
     try {
-      const response = await fetch('/api/tickets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'reply',
-          ticketId: selectedTicket.id,
-          replyMessage: replyText,
-          author: 'Admin'
-        }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        setReplyText('');
-        // Refresh ticket list
-        await fetchTickets(false);
-      } else {
-        alert("Failed to send reply. Please try again.");
+      const supabase = createClient();
+      
+      const { error: replyError } = await supabase
+        .from('ticket_replies')
+        .insert({
+          ticket_id: selectedTicket.id,
+          author: 'Admin',
+          message: replyText
+        });
+
+      if (replyError) throw replyError;
+
+      // Update ticket status to Replied
+      if (selectedTicket.status !== 'Closed') {
+        await supabase
+          .from('support_tickets')
+          .update({ status: 'Replied', updated_at: new Date().toISOString() })
+          .eq('id', selectedTicket.id);
       }
+
+      setReplyText('');
+      await fetchTickets(false);
     } catch (err) {
       console.error(err);
-      alert("Failed to send reply due to a connection issue.");
+      alert("Failed to send reply.");
     } finally {
       setIsSending(false);
     }
@@ -81,27 +95,18 @@ export default function AdminSupportPage() {
   const handleStatusChange = async (newStatus) => {
     if (!selectedTicket) return;
     try {
-      const response = await fetch('/api/tickets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: 'updateStatus',
-          ticketId: selectedTicket.id,
-          status: newStatus
-        }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        // Refresh ticket list
-        await fetchTickets(false);
-      } else {
-        alert("Failed to update status. Please try again.");
-      }
+      const supabase = createClient();
+      const { error } = await supabase
+        .from('support_tickets')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .eq('id', selectedTicket.id);
+
+      if (error) throw error;
+      
+      await fetchTickets(false);
     } catch (err) {
       console.error(err);
-      alert("Failed to update status due to a connection issue.");
+      alert("Failed to update status.");
     }
   };
 
@@ -111,15 +116,16 @@ export default function AdminSupportPage() {
   });
 
   const getStatusClass = (status) => {
-    switch (status) {
-      case 'Open': return styles.statusOpen;
-      case 'Replied': return styles.statusReplied;
-      case 'Closed': return styles.statusClosed;
+    switch (status?.toLowerCase()) {
+      case 'open': return styles.statusOpen;
+      case 'replied': return styles.statusReplied;
+      case 'closed': return styles.statusClosed;
       default: return '';
     }
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return '';
     const d = new Date(dateString);
     return d.toLocaleDateString('en-US', { 
       year: 'numeric', 
@@ -132,7 +138,6 @@ export default function AdminSupportPage() {
 
   return (
     <div className={styles.supportContainer}>
-      {/* Filters & Actions Header */}
       <div className={styles.filterBar}>
         <div className={styles.statusTabs}>
           {['All', 'Open', 'Replied', 'Closed'].map(status => (
@@ -185,10 +190,10 @@ export default function AdminSupportPage() {
                   </span>
                 </div>
                 <h4 className={styles.ticketSubject}>{ticket.subject}</h4>
-                <p className={styles.customerName}>Client: {ticket.userName}</p>
+                <p className={styles.customerName}>Client: {ticket.user_name}</p>
                 <div className={styles.ticketCardFooter}>
                   <Calendar size={12} />
-                  <span>{formatDate(ticket.createdAt)}</span>
+                  <span>{formatDate(ticket.created_at)}</span>
                   <ChevronRight size={16} className={styles.chevron} />
                 </div>
               </div>
@@ -199,7 +204,6 @@ export default function AdminSupportPage() {
           <div className={styles.ticketDetails}>
             {selectedTicket ? (
               <div className={styles.detailsBox}>
-                {/* Header Information */}
                 <div className={styles.detailsHeader}>
                   <div className={styles.headerInfo}>
                     <h3>{selectedTicket.subject}</h3>
@@ -207,20 +211,19 @@ export default function AdminSupportPage() {
                       <span>ID: <strong>{selectedTicket.id}</strong></span>
                       <span className={styles.divider}>•</span>
                       <User size={12} />
-                      <span>{selectedTicket.userName}</span>
+                      <span>{selectedTicket.user_name}</span>
                       <span className={styles.divider}>•</span>
                       <Mail size={12} />
-                      <a href={`mailto:${selectedTicket.userEmail}`} className={styles.mailLink}>
-                        {selectedTicket.userEmail}
+                      <a href={`mailto:${selectedTicket.user_email}`} className={styles.mailLink}>
+                        {selectedTicket.user_email}
                       </a>
                     </div>
                   </div>
 
-                  {/* Admin State Controls */}
                   <div className={styles.statusControls}>
                     <span className={styles.controlLabel}>Ticket Action:</span>
                     <div className={styles.controlGroup}>
-                      {selectedTicket.status !== 'Closed' ? (
+                      {selectedTicket.status?.toLowerCase() !== 'closed' ? (
                         <button 
                           className={styles.closeActionBtn}
                           onClick={() => handleStatusChange('Closed')}
@@ -251,8 +254,8 @@ export default function AdminSupportPage() {
                   {/* Original Customer Message */}
                   <div className={`${styles.chatMessage} ${styles.customerMsg}`}>
                     <div className={styles.msgHeader}>
-                      <span className={styles.senderName}>{selectedTicket.userName}</span>
-                      <span className={styles.msgTime}>{formatDate(selectedTicket.createdAt)}</span>
+                      <span className={styles.senderName}>{selectedTicket.user_name}</span>
+                      <span className={styles.msgTime}>{formatDate(selectedTicket.created_at)}</span>
                     </div>
                     <div className={styles.msgBody}>
                       <p>{selectedTicket.message}</p>
@@ -260,7 +263,7 @@ export default function AdminSupportPage() {
                   </div>
 
                   {/* Replies thread */}
-                  {selectedTicket.replies && selectedTicket.replies.map((reply, index) => {
+                  {selectedTicket.ticket_replies?.map((reply, index) => {
                     const isAdmin = reply.author === 'Admin';
                     return (
                       <div 
@@ -269,9 +272,9 @@ export default function AdminSupportPage() {
                       >
                         <div className={styles.msgHeader}>
                           <span className={styles.senderName}>
-                            {isAdmin ? 'You (Atelier Concierge)' : selectedTicket.userName}
+                            {isAdmin ? 'You (Atelier Concierge)' : selectedTicket.user_name}
                           </span>
-                          <span className={styles.msgTime}>{formatDate(reply.createdAt)}</span>
+                          <span className={styles.msgTime}>{formatDate(reply.created_at)}</span>
                         </div>
                         <div className={styles.msgBody}>
                           <p>{reply.message}</p>
@@ -283,7 +286,7 @@ export default function AdminSupportPage() {
                 </div>
 
                 {/* Reply Form */}
-                {selectedTicket.status !== 'Closed' ? (
+                {selectedTicket.status?.toLowerCase() !== 'closed' ? (
                   <form className={styles.replyForm} onSubmit={handleSendReply}>
                     <textarea 
                       placeholder="Write a professional styling advice reply..."

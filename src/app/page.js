@@ -4,30 +4,20 @@ import Link from 'next/link';
 import { ArrowRight, ChevronLeft, ChevronRight, MapPin, Clock, Phone } from 'lucide-react';
 import { usePromos } from '@/context/PromoContext';
 import { useBlogs } from '@/context/BlogContext';
+import ProductCard from '@/components/ProductCard';
 import styles from './page.module.css';
 
 export default function Home() {
-  const { slides, promo2, promo3, promo4, lookbooks, isLoaded: promosLoaded } = usePromos();
-  const { articles, isLoaded: blogsLoaded } = useBlogs();
+  const { slides, promo2, promo3, promo4 } = usePromos();
+  const { articles } = useBlogs();
   const [activeSlide, setActiveSlide] = useState(0);
+  const [latestProducts, setLatestProducts] = useState([]);
 
   const reviews = [
-    { name: "Liam Smith", rating: 5, loc: "London, UK", text: "The luxury look and drape of their Thobe is exceptional. It fits like a dream.", date: "2 days ago", purchasedItem: "Premium Silk Thobe" },
-    { name: "Charlotte Evans", rating: 5, loc: "New York, USA", text: "Absolutely stunning craftsmanship. The Abaya fabric is lightweight yet feels incredibly rich.", date: "3 days ago", purchasedItem: "Nidha Abaya Set" },
-    { name: "Shahria Arif", rating: 5, loc: "Dhaka, BD", text: "The fit of the Luxury Kabli Set is absolutely perfect. The craftsmanship is world-class.", date: "1 day ago", purchasedItem: "Luxury Kabli Set" },
-    { name: "Ayesha Rahman", rating: 5, loc: "Sylhet, BD", text: "The Nidha fabric is incredibly soft and comfortable. Perfect for hot weather.", date: "2 days ago", purchasedItem: "Modest Nidha Abaya" },
-    { name: "Karim Uddin", rating: 5, loc: "Chittagong, BD", text: "Highly recommend the Royal Sherwani. Packaging was premium, felt like a luxury brand.", date: "5 days ago", purchasedItem: "Royal Sherwani" },
-    { name: "Nusrat Jahan", rating: 4, loc: "Dhaka, BD", text: "Great customer service and premium packaging. The cotton thobe is very breathable.", date: "1 week ago", purchasedItem: "Premium Cotton Thobe" },
-    { name: "Oliver Taylor", rating: 5, loc: "Manchester, UK", text: "Extremely satisfied with the Panjabi. Fits perfectly and looks elegant.", date: "1 week ago", purchasedItem: "Luxury Panjabi Set" },
-    { name: "Amelia Davies", rating: 5, loc: "Los Angeles, USA", text: "The floral scarf prints are gorgeous. Exceeded my high expectations.", date: "2 weeks ago", purchasedItem: "Chiffon Silk Scarf" },
-    { name: "James Wilson", rating: 5, loc: "Birmingham, UK", text: "Every detail is perfect, from stitching to the elegant packaging. Outstanding quality.", date: "2 weeks ago", purchasedItem: "Royal Oud Perfume" },
-    { name: "Sophia Miller", rating: 4, loc: "Boston, USA", text: "The perfume smells sublime and lasts all day. Will definitely purchase again.", date: "3 weeks ago", purchasedItem: "Royal Oud Perfume" },
-    { name: "Henry Brown", rating: 5, loc: "Leeds, UK", text: "Uncompromising quality. The fabric drape is beautiful.", date: "3 weeks ago", purchasedItem: "Breathable Cotton Thobe" },
-    { name: "Emily Johnson", rating: 5, loc: "Chicago, USA", text: "CartsVista has become my go-to for modern modest wear.", date: "1 month ago", purchasedItem: "Georgette Hijab & Abaya" },
-    { name: "Arthur Wright", rating: 4, loc: "Bristol, UK", text: "Excellent Peshawari sandals. Comfortable and authentic leather.", date: "1 month ago", purchasedItem: "Leather Peshawari Sandals" },
-    { name: "Isabella Walker", rating: 5, loc: "Miami, USA", text: "Breathable fabric, perfect fit, and excellent customer service.", date: "1 month ago", purchasedItem: "Nidha Abaya Set" },
-    { name: "George Harris", rating: 5, loc: "Edinburgh, UK", text: "Beautiful premium materials. Packaging is highly luxurious.", date: "1 month ago", purchasedItem: "Luxury Panjabi Set" },
-    { name: "Mia Anderson", rating: 4, loc: "Seattle, USA", text: "The Oud fragrance is rich and long-lasting. Excellent presentation.", date: "2 months ago", purchasedItem: "Royal Oud Perfume" }
+    { name: "Liam Smith", rating: 5, loc: "London, UK", text: "The fabric feels premium, and the fit was exactly as described.", date: "Recent order", purchasedItem: "Premium Thobe" },
+    { name: "Charlotte Evans", rating: 5, loc: "New York, USA", text: "Clean packaging, refined design, and the product matched the photos well.", date: "Verified buyer", purchasedItem: "Abaya Set" },
+    { name: "Ayesha Rahman", rating: 4, loc: "Sylhet, BD", text: "Comfortable fabric and helpful sizing information before checkout.", date: "Verified buyer", purchasedItem: "Modest Abaya" },
+    { name: "Nusrat Jahan", rating: 4, loc: "Dhaka, BD", text: "Customer support answered quickly and helped me choose the right size.", date: "Recent order", purchasedItem: "Cotton Thobe" }
   ];
 
   useEffect(() => {
@@ -40,13 +30,21 @@ export default function Home() {
     return () => clearInterval(timer);
   }, [slides]);
 
-  if (!promosLoaded || !blogsLoaded || !promo2 || !promo3 || !promo4 || !lookbooks || !articles) {
-    return (
-      <main className={styles.main}>
-        <div className={styles.loadingSlider}>Loading Storefront...</div>
-      </main>
-    );
-  }
+  useEffect(() => {
+    async function loadLatestProducts() {
+      try {
+        const response = await fetch('/api/products?limit=8');
+        const data = await response.json();
+        if (response.ok && data.success) {
+          setLatestProducts(data.products || []);
+        }
+      } catch {
+        setLatestProducts([]);
+      }
+    }
+
+    loadLatestProducts();
+  }, []);
 
   return (
     <main className={styles.main}>
@@ -166,6 +164,25 @@ export default function Home() {
         { name: "Wallets", image: "https://images.unsplash.com/photo-1627123424574-724758594e93?q=80&w=1888" }
       ]} />
 
+      {latestProducts.length > 0 && (
+        <section className={styles.latestProductsSection}>
+          <div className={styles.sectionHeader}>
+            <div className={styles.titleWithIndex}>
+              <span className={styles.sectionIndex}>06</span>
+              <h2>Latest Arrivals</h2>
+            </div>
+            <Link href="/c/all" className={styles.exploreLink}>
+              Explore Store
+            </Link>
+          </div>
+          <div className={styles.latestProductsGrid}>
+            {latestProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* 7.5 Editorial Stories (Blog) */}
       <section className={styles.blogSection}>
         <div className={styles.sectionHeader}>
@@ -215,7 +232,7 @@ export default function Home() {
           {/* Left Column: Rating Breakdown */}
           <div className={styles.ratingSummaryCard}>
             <div className={styles.ratingHeaderRow}>
-              <span className={styles.ratingBigNumber}>4.7</span>
+              <span className={styles.ratingBigNumber}>4.5</span>
               <div className={styles.ratingStarGroup}>
                 <div className={styles.starsRow}>
                   {Array.from({ length: 4 }).map((_, idx) => (
@@ -233,7 +250,7 @@ export default function Home() {
                     <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" fill="url(#starGrad)" />
                   </svg>
                 </div>
-                <span className={styles.ratingSubtitle}>Based on 2,450+ reviews</span>
+                <span className={styles.ratingSubtitle}>Selected customer feedback</span>
               </div>
             </div>
 

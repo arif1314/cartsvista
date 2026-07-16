@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Search, Eye } from 'lucide-react';
-import { supabase } from '@/utils/supabaseClient';
+import { formatCurrency } from '@/lib/format/currency';
 import styles from './page.module.css';
 
 export default function AdminOrders() {
@@ -16,32 +17,35 @@ export default function AdminOrders() {
 
   async function fetchOrders() {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (!error && data) {
-      setOrders(data);
-    } else {
-      // Fallback if DB fails
-      setOrders([
-        { id: "#CV-9824", shipping_address: { firstName: "Shahria", lastName: "Arif" }, created_at: "2023-10-24T00:00:00Z", total_amount: 12500, status: "processing" }
-      ]);
+    try {
+      const response = await fetch('/api/admin/orders');
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Unable to load orders.');
+      }
+      setOrders(data.orders || []);
+    } catch (error) {
+      alert(error.message);
+      setOrders([]);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   }
 
   const handleStatusChange = async (id, newStatus) => {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status: newStatus.toLowerCase() })
-      .eq('id', id);
-    
-    if (!error) {
+    try {
+      const response = await fetch(`/api/admin/orders/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus.toLowerCase() }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Unable to update order.');
+      }
       setOrders(orders.map(o => o.id === id ? { ...o, status: newStatus.toLowerCase() } : o));
-    } else {
-      alert('Failed to update status (DB Error): ' + error.message);
+    } catch (error) {
+      alert('Failed to update status: ' + error.message);
     }
   };
 
@@ -112,6 +116,7 @@ export default function AdminOrders() {
                   const date = new Date(order.created_at).toLocaleDateString();
                   const customer = `${order.shipping_address?.firstName || ''} ${order.shipping_address?.lastName || ''}`;
                   const displayId = order.id.length > 8 ? order.id.substring(0, 8) + '...' : order.id;
+                  const itemCount = (order.order_items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
                   // Capitalize status
                   const capStatus = order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Pending';
                   
@@ -120,8 +125,8 @@ export default function AdminOrders() {
                       <td className={styles.fw500} title={order.id}>{displayId}</td>
                       <td>{customer || 'Guest'}</td>
                       <td className={styles.textMuted}>{date}</td>
-                      <td>-</td>
-                      <td className={styles.fw500}>BDT {order.total_amount}</td>
+                      <td>{itemCount || '-'}</td>
+                      <td className={styles.fw500}>{formatCurrency(order.total_amount)}</td>
                       <td>
                         <select 
                           className={`${styles.statusSelect} ${styles['status' + capStatus]}`}
@@ -136,9 +141,9 @@ export default function AdminOrders() {
                         </select>
                       </td>
                       <td>
-                        <button className={styles.actionBtn} title="View Details">
+                        <Link href={`/admin/orders/${order.id}`} className={styles.actionBtn} title="View Details">
                           <Eye size={16} />
-                        </button>
+                        </Link>
                       </td>
                     </tr>
                   );

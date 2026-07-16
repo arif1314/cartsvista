@@ -145,14 +145,18 @@
   margin-top: -0.5rem;
 }
 
-.forgotPassword a {
+.forgotBtn {
   font-size: 0.75rem;
   color: var(--secondary);
   text-decoration: underline;
   text-underline-offset: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
-.forgotPassword a:hover {
+.forgotBtn:hover {
   color: var(--primary);
 }
 
@@ -169,10 +173,27 @@
   transition: background 0.3s ease;
   border: none;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.submitBtn:hover {
+.submitBtn:hover:not(:disabled) {
   background: #000;
+}
+
+.submitBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .toggleMode {
@@ -191,4 +212,28 @@
   background: transparent;
   border: none;
   cursor: pointer;
+}
+
+/* Alerts */
+.alertError, .alertSuccess {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.alertError {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #f87171;
+}
+
+.alertSuccess {
+  background-color: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #4ade80;
 }

@@ -1,6 +1,7 @@
 "use client";
 import { X, Minus, Plus, Trash2 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
+import { formatCurrency } from '@/lib/format/currency';
 import styles from './CartDrawer.module.css';
 import Link from 'next/link';
 
@@ -47,7 +48,7 @@ export default function CartDrawer() {
                       <span>{item.quantity}</span>
                       <button onClick={() => updateQuantity(item.id, item.size, item.quantity + 1)}><Plus size={14} /></button>
                     </div>
-                    <p className={styles.itemPrice}>৳ {item.price * item.quantity}</p>
+                    <p className={styles.itemPrice}>{formatCurrency(item.price * item.quantity)}</p>
                   </div>
                 </div>
               </div>
@@ -59,7 +60,7 @@ export default function CartDrawer() {
           <div className={styles.footer}>
             <div className={styles.totalRow}>
               <span>Subtotal</span>
-              <span>৳ {cartTotal}</span>
+              <span>{formatCurrency(cartTotal)}</span>
             </div>
             <p className={styles.taxesInfo}>Taxes and shipping calculated at checkout</p>
             <Link href="/checkout" className={styles.checkoutBtn} onClick={() => setIsCartOpen(false)}>

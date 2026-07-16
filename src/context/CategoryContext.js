@@ -1,104 +1,46 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 const CategoryContext = createContext();
 
-const initialCategories = {
-  men: {
-    title: "Menswear",
-    collections: ["Panjabi", "Thobe & Jubba", "Koti & Waistcoat", "Footwear"]
-  },
-  women: {
-    title: "Womenswear",
-    collections: ["Abaya & Burkha", "Premium Hijab", "Salwar Kameez", "Jewelry"]
-  },
-  kids: {
-    title: "Kids Collection",
-    collections: ["Boys Panjabi", "Girls Dress", "Newborn"]
-  },
-  accessories: {
-    title: "Accessories",
-    collections: ["Perfume & Attar", "Premium Caps", "Tasbih"]
-  }
-};
-
 export function CategoryProvider({ children }) {
-  const [categories, setCategories] = useState(initialCategories);
+  const [categories, setCategories] = useState({});
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load from localStorage if available
   useEffect(() => {
-    const saved = localStorage.getItem('cartsvista_categories');
-    if (saved) {
+    async function fetchCategories() {
       try {
-        setCategories(JSON.parse(saved));
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('categories')
+          .select('*')
+          .order('sort_order', { ascending: true });
+          
+        if (!error && data) {
+          const catObj = {};
+          data.forEach(cat => {
+            catObj[cat.slug] = {
+              title: cat.title,
+              collections: cat.collections || []
+            };
+          });
+          setCategories(catObj);
+        }
       } catch (e) {
-        console.error("Failed to parse categories");
+        console.error("Failed to fetch categories", e);
+      } finally {
+        setIsLoaded(true);
       }
     }
+    
+    fetchCategories();
   }, []);
-
-  // Save to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('cartsvista_categories', JSON.stringify(categories));
-  }, [categories]);
-
-  const addCategory = (slug, title) => {
-    setCategories(prev => ({
-      ...prev,
-      [slug]: {
-        title,
-        collections: []
-      }
-    }));
-  };
-
-  const deleteCategory = (slug) => {
-    setCategories(prev => {
-      const newCats = { ...prev };
-      delete newCats[slug];
-      return newCats;
-    });
-  };
-
-  const addSubcategory = (categorySlug, subcategoryName) => {
-    setCategories(prev => {
-      if (!prev[categorySlug]) return prev;
-      
-      const updatedCollections = [...prev[categorySlug].collections];
-      if (!updatedCollections.includes(subcategoryName)) {
-        updatedCollections.push(subcategoryName);
-      }
-      
-      return {
-        ...prev,
-        [categorySlug]: {
-          ...prev[categorySlug],
-          collections: updatedCollections
-        }
-      };
-    });
-  };
-
-  const deleteSubcategory = (categorySlug, subcategoryName) => {
-    setCategories(prev => {
-      if (!prev[categorySlug]) return prev;
-      return {
-        ...prev,
-        [categorySlug]: {
-          ...prev[categorySlug],
-          collections: prev[categorySlug].collections.filter(c => c !== subcategoryName)
-        }
-      };
-    });
-  };
 
   return (
     <CategoryContext.Provider value={{ 
-      categories, 
-      addCategory, 
-      deleteCategory, 
-      addSubcategory, 
-      deleteSubcategory 
+      categories,
+      isLoaded 
     }}>
       {children}
     </CategoryContext.Provider>
@@ -106,5 +48,9 @@ export function CategoryProvider({ children }) {
 }
 
 export function useCategory() {
-  return useContext(CategoryContext);
+  const context = useContext(CategoryContext);
+  if (!context) {
+    throw new Error('useCategory must be used within a CategoryProvider');
+  }
+  return context;
 }

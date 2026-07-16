@@ -1,0 +1,63 @@
+.page {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: #fafafa;
+}
+
+.card {
+  width: min(520px, 100%);
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  color: #121212;
+}
+
+.card svg {
+  color: #1bc5bd;
+  margin-bottom: 1rem;
+}
+
+.card h1 {
+  font-family: var(--font-serif);
+  margin-bottom: 0.75rem;
+}
+
+.card p {
+  color: #666;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.actions a {
+  border: 1px solid #121212;
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  color: #121212;
+}
+
+.actions a:first-child {
+  background: #121212;
+  color: #fff;
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

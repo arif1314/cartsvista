@@ -150,20 +150,6 @@
   border-radius: 100px;
 }
 
-.loadingSlider {
-  width: 100%;
-  max-width: 1250px;
-  height: 520px;
-  margin: 2rem auto;
-  border-radius: 20px;
-  background: #f3f3f3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--secondary);
-  font-weight: 500;
-}
-
 .promoOverlayLeft {
   position: absolute;
   top: 15%;
@@ -446,6 +432,19 @@
 .collectionCard:hover .collectionOverlay h3 {
   color: var(--accent);
   letter-spacing: 0.15em;
+}
+
+.latestProductsSection {
+  max-width: 1440px;
+  margin: 4rem auto;
+  padding: 0 1rem;
+}
+
+.latestProductsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5rem;
+  padding: 0 0.5rem;
 }
 
 /* 7. Style Guide */
@@ -1215,6 +1214,7 @@
   /* Removed .promoGrid stacking so Tablet view remains side-by-side like Desktop */
   .collectionCard { flex: 0 0 30%; }
   .lookbookGrid { grid-template-columns: repeat(2, 1fr); }
+  .latestProductsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .blogCard { flex: 0 0 60%; }
   .newsletterContainer h2 { font-size: 2.5rem; }
   .storeGridModern { 
@@ -1230,6 +1230,7 @@
 @media (max-width: 600px) {
   .promoGrid { flex-direction: column; }
   .lookbookGrid { grid-template-columns: 1fr; }
+  .latestProductsGrid { grid-template-columns: 1fr; }
   
   .collectionGrid {
     gap: 1rem;

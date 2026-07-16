@@ -1,0 +1,208 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 1200px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #666;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.backBtn:hover {
+  color: #121212;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  color: #121212;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.formLayout {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.mainColumn {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.sideColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.card {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #eaeaea;
+  padding: 2rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.01);
+}
+
+.card h3 {
+  font-size: 1.1rem;
+  color: #121212;
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.formGroup:last-child {
+  margin-bottom: 0;
+}
+
+.formGroup label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.formGroup input,
+.formGroup textarea,
+.formGroup select {
+  padding: 0.75rem 1rem;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.3s;
+  width: 100%;
+}
+
+.formGroup input:focus,
+.formGroup textarea:focus,
+.formGroup select:focus {
+  border-color: #3699ff;
+  background: #fff;
+}
+
+.uploadBox {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 3rem 2rem;
+  text-align: center;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.uploadIcon {
+  color: #a2a3b7;
+  margin-bottom: 0.5rem;
+}
+
+.uploadBox p {
+  color: #121212;
+  font-weight: 500;
+}
+
+.uploadBox span {
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.browseBtn {
+  margin-top: 1rem;
+  background: #fff;
+  border: 1px solid #eaeaea;
+  color: #121212;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.browseBtn:hover {
+  background: #f5f5f5;
+}
+
+.actionCard {
+  display: flex;
+  gap: 1rem;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #eaeaea;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.01);
+}
+
+.discardBtn,
+.publishBtn {
+  flex: 1;
+  padding: 0.85rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-align: center;
+}
+
+.discardBtn {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  color: #666;
+}
+
+.discardBtn:hover {
+  background: #f5f5f5;
+  color: #121212;
+}
+
+.publishBtn {
+  background: #3699ff;
+  border: none;
+  color: #fff;
+}
+
+.publishBtn:hover {
+  background: #187de4;
+}
+
+@media (max-width: 1024px) {
+  .formLayout {
+    flex-direction: column;
+  }
+  .mainColumn, .sideColumn {
+    width: 100%;
+  }
+}

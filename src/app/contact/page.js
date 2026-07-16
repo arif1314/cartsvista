@@ -1,12 +1,41 @@
 "use client";
+import { useState } from 'react';
 import Link from 'next/link';
 import { Mail, Phone, MapPin, Clock } from 'lucide-react';
 import styles from './page.module.css';
 
 export default function ContactPage() {
-  const handleSubmit = (e) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notice, setNotice] = useState('');
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Thank you for reaching out to CartsVista. Our elite support team will respond within 24 hours.");
+    setIsSubmitting(true);
+    setNotice('');
+
+    const formData = new FormData(e.currentTarget);
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.get('name'),
+          email: formData.get('email'),
+          subject: formData.get('subject'),
+          message: formData.get('message'),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Unable to submit your message.');
+      }
+      e.currentTarget.reset();
+      setNotice('Thank you for reaching out. Your message has been received and our support team will respond within 24 hours.');
+    } catch (error) {
+      setNotice(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -47,26 +76,29 @@ export default function ContactPage() {
         {/* Contact Form */}
         <div className={styles.formSection}>
           <h2>Send us a message</h2>
+          {notice && <p className={styles.notice}>{notice}</p>}
           <form className={styles.contactForm} onSubmit={handleSubmit}>
             <div className={styles.formRow}>
               <div className={styles.inputGroup}>
                 <label htmlFor="name">Name *</label>
-                <input type="text" id="name" required placeholder="Enter your full name" />
+                <input type="text" id="name" name="name" required placeholder="Enter your full name" />
               </div>
               <div className={styles.inputGroup}>
                 <label htmlFor="email">Email *</label>
-                <input type="email" id="email" required placeholder="Enter your email address" />
+                <input type="email" id="email" name="email" required placeholder="Enter your email address" />
               </div>
             </div>
             <div className={styles.inputGroup}>
               <label htmlFor="subject">Subject *</label>
-              <input type="text" id="subject" required placeholder="How can we help you?" />
+              <input type="text" id="subject" name="subject" required placeholder="How can we help you?" />
             </div>
             <div className={styles.inputGroup}>
               <label htmlFor="message">Message *</label>
-              <textarea id="message" rows="6" required placeholder="Write your message here..."></textarea>
+              <textarea id="message" name="message" rows="6" required placeholder="Write your message here..."></textarea>
             </div>
-            <button type="submit" className={styles.submitBtn}>Send Message</button>
+            <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
+              {isSubmitting ? 'Sending...' : 'Send Message'}
+            </button>
           </form>
         </div>
       </div>

@@ -138,6 +138,106 @@
   font-size: 0.85rem;
 }
 
+.imageActions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.imageUploadBtn,
+.imageUrlBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid #121212;
+  border-radius: 6px;
+  background: #121212;
+  color: #fff;
+  padding: 0.65rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.imageUrlBtn {
+  background: #fff;
+  color: #121212;
+}
+
+.imageUploadBtn input {
+  display: none;
+}
+
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.emptyImages {
+  grid-column: 1 / -1;
+  color: #888;
+  border: 1px dashed #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.imageTile {
+  border: 1px solid #eaeaea;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.imageTile img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  display: block;
+  background: #f5f5f5;
+}
+
+.imageTileMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.65rem;
+}
+
+.imageTileMeta span {
+  color: #333;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.imageTileActions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.imageTileActions button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #eaeaea;
+  border-radius: 4px;
+  background: #fafafa;
+  color: #666;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.imageTileActions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .browseBtn {
   margin-top: 1rem;
   background: #fff;
@@ -198,11 +298,63 @@
   background: #187de4;
 }
 
+.publishBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.movementList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.movementItem {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.movementItem:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.movementItem span {
+  color: #888;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.movementTitle {
+  color: #121212;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.movementNote {
+  color: #666;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
 @media (max-width: 1024px) {
   .formLayout {
     flex-direction: column;
   }
   .mainColumn, .sideColumn {
     width: 100%;
+  }
+  .imageGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .imageGrid {
+    grid-template-columns: 1fr;
   }
 }

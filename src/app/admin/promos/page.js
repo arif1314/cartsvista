@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from 'react';
-import { usePromos } from '@/context/PromoContext';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import { 
   Plus,
   Trash2,
@@ -22,22 +22,12 @@ import {
 import styles from './page.module.css';
 
 export default function AdminPromosPage() {
-  const { 
-    slides, 
-    promo2, 
-    promo3, 
-    promo4, 
-    lookbooks,
-    addSlide, 
-    updateSlide, 
-    deleteSlide, 
-    moveSlide, 
-    updateStaticPromo, 
-    addLook,
-    updateLook,
-    deleteLook,
-    resetPromos 
-  } = usePromos();
+  const [slides, setSlides] = useState([]);
+  const [promo2, setPromo2] = useState(null);
+  const [promo3, setPromo3] = useState(null);
+  const [promo4, setPromo4] = useState(null);
+  const [lookbooks, setLookbooks] = useState([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const [activeTab, setActiveTab] = useState('slider'); // 'slider', 'static', or 'lookbook'
   
@@ -91,17 +81,63 @@ export default function AdminPromosPage() {
     }));
   };
 
+  const fetchPromos = async () => {
+    setIsLoaded(false);
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('banners')
+      .select('*')
+      .order('sort_order', { ascending: true });
+      
+    if (!error && data) {
+      const newSlides = [];
+      const newLookbooks = [];
+      let p2 = null, p3 = null, p4 = null;
+      
+      data.forEach(banner => {
+        const item = {
+          id: banner.id,
+          title: banner.title,
+          subtitle: banner.subtitle,
+          image: banner.image_url,
+          buttonText: banner.button_text,
+          link: banner.link,
+          badge: banner.badge,
+          percentage: banner.percentage,
+          tag: banner.tag,
+          fabric: banner.fabric,
+          sort_order: banner.sort_order
+        };
+        if (banner.slot === 'hero_slide') newSlides.push(item);
+        else if (banner.slot === 'lookbook') newLookbooks.push(item);
+        else if (banner.slot === 'promo2') p2 = item;
+        else if (banner.slot === 'promo3') p3 = item;
+        else if (banner.slot === 'promo4') p4 = item;
+      });
+      setSlides(newSlides);
+      setLookbooks(newLookbooks);
+      setPromo2(p2);
+      setPromo3(p3);
+      setPromo4(p4);
+    }
+    setIsLoaded(true);
+  };
+
+  useEffect(() => {
+    fetchPromos();
+  }, []);
+
   // Initializing static form values when selected
   const handleSelectStatic = (id) => {
     setSelectedStaticId(id);
     const promo = id === 'promo2' ? promo2 : id === 'promo3' ? promo3 : promo4;
     setStaticForm({
-      image: promo.image || '',
-      title: promo.title || '',
-      subtitle: promo.subtitle || '',
-      badge: promo.badge || '',
-      percentage: promo.percentage || '',
-      link: promo.link || ''
+      image: promo?.image || '',
+      title: promo?.title || '',
+      subtitle: promo?.subtitle || '',
+      badge: promo?.badge || '',
+      percentage: promo?.percentage || '',
+      link: promo?.link || ''
     });
     setSuccess(false);
   };
@@ -128,13 +164,24 @@ export default function AdminPromosPage() {
   };
 
   // Form submits
-  const handleSlideSubmit = (e) => {
+  const handleSlideSubmit = async (e) => {
     e.preventDefault();
+    const supabase = createClient();
+    const dataObj = {
+      slot: 'hero_slide',
+      title: slideForm.title,
+      subtitle: slideForm.subtitle,
+      button_text: slideForm.buttonText,
+      image_url: slideForm.image,
+      link: slideForm.link,
+      is_active: true
+    };
+
     if (editingSlideId) {
-      updateSlide(editingSlideId, slideForm);
+      await supabase.from('banners').update(dataObj).eq('id', editingSlideId);
       setMsg("Campaign slide updated!");
     } else {
-      addSlide(slideForm);
+      await supabase.from('banners').insert([{ ...dataObj, sort_order: slides.length }]);
       setMsg("New campaign slide added!");
       setSlideForm({
         title: '',
@@ -144,13 +191,35 @@ export default function AdminPromosPage() {
         link: ''
       });
     }
+    fetchPromos();
     setSuccess(true);
     setTimeout(() => setSuccess(false), 3000);
   };
 
-  const handleStaticSubmit = (e) => {
+  const handleStaticSubmit = async (e) => {
     e.preventDefault();
-    updateStaticPromo(selectedStaticId, staticForm);
+    const supabase = createClient();
+    
+    // update or insert
+    const promoData = selectedStaticId === 'promo2' ? promo2 : selectedStaticId === 'promo3' ? promo3 : promo4;
+    const dataObj = {
+      slot: selectedStaticId,
+      title: staticForm.title,
+      subtitle: staticForm.subtitle,
+      image_url: staticForm.image,
+      link: staticForm.link,
+      badge: staticForm.badge,
+      percentage: staticForm.percentage,
+      is_active: true
+    };
+    
+    if (promoData?.id) {
+      await supabase.from('banners').update(dataObj).eq('id', promoData.id);
+    } else {
+      await supabase.from('banners').insert([dataObj]);
+    }
+    
+    fetchPromos();
     setMsg(`Static Slot ${selectedStaticId.replace('promo', '')} updated!`);
     setSuccess(true);
     setTimeout(() => setSuccess(false), 3000);
@@ -168,13 +237,28 @@ export default function AdminPromosPage() {
     setSuccess(false);
   };
 
-  const handleDeleteSlide = (id) => {
+  const handleDeleteSlide = async (id) => {
     if (confirm("Are you sure you want to delete this slide from the campaign?")) {
-      deleteSlide(id);
+      const supabase = createClient();
+      await supabase.from('banners').delete().eq('id', id);
+      fetchPromos();
       if (editingSlideId === id) {
         handleAddNewSlide();
       }
     }
+  };
+  
+  const handleMoveSlide = async (index, direction) => {
+    const nextIndex = direction === 'up' ? index - 1 : index + 1;
+    if (nextIndex < 0 || nextIndex >= slides.length) return;
+
+    const supabase = createClient();
+    const currentSlide = slides[index];
+    const targetSlide = slides[nextIndex];
+    
+    await supabase.from('banners').update({ sort_order: targetSlide.sort_order || nextIndex }).eq('id', currentSlide.id);
+    await supabase.from('banners').update({ sort_order: currentSlide.sort_order || index }).eq('id', targetSlide.id);
+    fetchPromos();
   };
 
   // Lookbook handlers
@@ -204,13 +288,25 @@ export default function AdminPromosPage() {
     setSuccess(false);
   };
 
-  const handleLookSubmit = (e) => {
+  const handleLookSubmit = async (e) => {
     e.preventDefault();
+    const supabase = createClient();
+    const dataObj = {
+      slot: 'lookbook',
+      title: lookForm.title,
+      subtitle: lookForm.subtitle,
+      tag: lookForm.tag,
+      fabric: lookForm.fabric,
+      image_url: lookForm.image,
+      link: lookForm.link,
+      is_active: true
+    };
+    
     if (editingLookId) {
-      updateLook(editingLookId, lookForm);
+      await supabase.from('banners').update(dataObj).eq('id', editingLookId);
       setMsg("Lookbook item updated!");
     } else {
-      addLook(lookForm);
+      await supabase.from('banners').insert([{ ...dataObj, sort_order: lookbooks.length }]);
       setMsg("New lookbook item added!");
       setLookForm({
         title: '',
@@ -221,13 +317,16 @@ export default function AdminPromosPage() {
         link: ''
       });
     }
+    fetchPromos();
     setSuccess(true);
     setTimeout(() => setSuccess(false), 3000);
   };
 
-  const handleDeleteLook = (id) => {
+  const handleDeleteLook = async (id) => {
     if (confirm("Are you sure you want to delete this lookbook item?")) {
-      deleteLook(id);
+      const supabase = createClient();
+      await supabase.from('banners').delete().eq('id', id);
+      fetchPromos();
       if (editingLookId === id) {
         handleAddNewLook();
       }
@@ -235,14 +334,7 @@ export default function AdminPromosPage() {
   };
 
   const handleResetAll = () => {
-    if (confirm("Are you sure you want to reset all promotions (slideshow, static, and lookbook) to defaults?")) {
-      resetPromos();
-      handleAddNewSlide();
-      handleAddNewLook();
-      setTimeout(() => {
-        handleSelectStatic('promo2');
-      }, 50);
-    }
+    fetchPromos();
   };
 
   return (
@@ -322,7 +414,7 @@ export default function AdminPromosPage() {
                         <button 
                           type="button"
                           disabled={index === 0}
-                          onClick={() => moveSlide(index, 'up')}
+                          onClick={() => handleMoveSlide(index, 'up')}
                           className={styles.sortBtn}
                         >
                           <ArrowUp size={12} />
@@ -330,7 +422,7 @@ export default function AdminPromosPage() {
                         <button 
                           type="button"
                           disabled={index === slides.length - 1}
-                          onClick={() => moveSlide(index, 'down')}
+                          onClick={() => handleMoveSlide(index, 'down')}
                           className={styles.sortBtn}
                         >
                           <ArrowDown size={12} />

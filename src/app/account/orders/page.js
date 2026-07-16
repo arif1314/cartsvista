@@ -1,97 +1,134 @@
 "use client";
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
+import { formatCurrency } from '@/lib/format/currency';
 import styles from './page.module.css';
 
 export default function OrdersPage() {
-  const orders = [
-    {
-      id: "#CV-9824",
-      date: "Oct 24, 2023",
-      total: "BDT 12,500",
-      status: "Processing",
-      items: [
-        { name: "Classic Midnight Panjabi", size: "42", qty: 1, image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=200&auto=format&fit=crop" }
-      ]
-    },
-    {
-      id: "#CV-8102",
-      date: "Aug 15, 2023",
-      total: "BDT 18,000",
-      status: "Delivered",
-      items: [
-        { name: "Royal Emerald Thobe", size: "54", qty: 1, image: "https://images.unsplash.com/photo-1593030103066-0093718efeb9?q=80&w=200&auto=format&fit=crop" },
-        { name: "Premium Leather Sandals", size: "43", qty: 1, image: "https://images.unsplash.com/photo-1560769629-975ec94e6a86?q=80&w=200&auto=format&fit=crop" }
-      ]
-    },
-    {
-      id: "#CV-7431",
-      date: "May 02, 2023",
-      total: "BDT 15,000",
-      status: "Delivered",
-      items: [
-        { name: "Silk Blend Abaya", size: "Free", qty: 1, image: "https://images.unsplash.com/photo-1589156280159-27698a70f29e?q=80&w=200&auto=format&fit=crop" }
-      ]
+  const [orders, setOrders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchOrders() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        // Fetch orders and their items
+        const { data, error } = await supabase
+          .from('orders')
+          .select(`
+            *,
+            order_items (
+              *,
+              products (
+                name,
+                images
+              )
+            )
+          `)
+          // Assuming user_id is in orders table (Note: Migration v2 didn't add user_id to orders! We need to fix this or fetch by email)
+          // Wait, orders table in the current schema doesn't have a user_id? Let's check the schema.
+          // Fallback: fetch by shipping_address email
+          .order('created_at', { ascending: false });
+
+        if (data) {
+          // Filter by user's email if user_id doesn't exist
+          const userOrders = data.filter(order => order.shipping_address?.email === user.email);
+          setOrders(userOrders);
+        }
+      }
+      setIsLoading(false);
     }
-  ];
+    fetchOrders();
+  }, []);
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   return (
     <div className={styles.ordersContainer}>
       <h2 className={styles.title}>Order History</h2>
       <p className={styles.subtitle}>Check the status of recent orders, manage returns, and discover similar products.</p>
 
-      <div className={styles.ordersList}>
-        {orders.map((order) => (
-          <div key={order.id} className={styles.orderCard}>
-            <div className={styles.orderHeader}>
-              <div className={styles.headerInfo}>
-                <div>
-                  <p className={styles.label}>Order Number</p>
-                  <p className={styles.value}>{order.id}</p>
-                </div>
-                <div className={styles.divider}></div>
-                <div>
-                  <p className={styles.label}>Date Placed</p>
-                  <p className={styles.value}>{order.date}</p>
-                </div>
-                <div className={styles.divider}></div>
-                <div>
-                  <p className={styles.label}>Total Amount</p>
-                  <p className={styles.value}>{order.total}</p>
-                </div>
-              </div>
-              <div className={styles.headerActions}>
-                <button className={styles.invoiceBtn}>View Invoice</button>
-              </div>
-            </div>
-
-            <div className={styles.orderDetails}>
-              <div className={styles.statusRow}>
-                <span className={`${styles.statusBadge} ${order.status === 'Processing' ? styles.statusProcessing : styles.statusDelivered}`}>
-                  {order.status}
-                </span>
-                <p className={styles.statusText}>
-                  {order.status === 'Processing' ? 'Expected delivery by Oct 28' : 'Delivered on time'}
-                </p>
-              </div>
-
-              <div className={styles.itemsList}>
-                {order.items.map((item, idx) => (
-                  <div key={idx} className={styles.item}>
-                    <img src={item.image} alt={item.name} />
-                    <div className={styles.itemInfo}>
-                      <h4>{item.name}</h4>
-                      <p>Size: {item.size}</p>
-                      <p>Qty: {item.qty}</p>
-                    </div>
-                    <div className={styles.itemActions}>
-                      <button className={styles.actionBtn}>Buy Again</button>
-                    </div>
+      {isLoading ? (
+        <p>Loading your orders...</p>
+      ) : orders.length === 0 ? (
+        <div style={{ padding: '2rem 0', textAlign: 'center' }}>
+          <p>You haven't placed any orders yet.</p>
+          <Link href="/" style={{ textDecoration: 'underline', color: 'var(--primary)', marginTop: '1rem', display: 'inline-block' }}>
+            Start Shopping
+          </Link>
+        </div>
+      ) : (
+        <div className={styles.ordersList}>
+          {orders.map((order) => (
+            <div key={order.id} className={styles.orderCard}>
+              <div className={styles.orderHeader}>
+                <div className={styles.headerInfo}>
+                  <div>
+                    <p className={styles.label}>Order Number</p>
+                    <p className={styles.value}>#{order.id.slice(0, 8)}</p>
                   </div>
-                ))}
+                  <div className={styles.divider}></div>
+                  <div>
+                    <p className={styles.label}>Date Placed</p>
+                    <p className={styles.value}>{formatDate(order.created_at)}</p>
+                  </div>
+                  <div className={styles.divider}></div>
+                  <div>
+                    <p className={styles.label}>Total Amount</p>
+                    <p className={styles.value}>{formatCurrency(order.total_amount)}</p>
+                  </div>
+                </div>
+                <div className={styles.headerActions}>
+                  <Link href={`/account/orders/${order.id}`} className={styles.invoiceBtn}>
+                    View Details
+                  </Link>
+                </div>
+              </div>
+
+              <div className={styles.orderDetails}>
+                <div className={styles.statusRow}>
+                  <span className={`${styles.statusBadge} ${order.status === 'delivered' ? styles.statusDelivered : styles.statusProcessing}`}>
+                    {order.status.toUpperCase()}
+                  </span>
+                  <p className={styles.statusText}>
+                    {order.status === 'delivered' ? 'Delivered successfully' : 'Processing your order'}
+                  </p>
+                </div>
+
+                <div className={styles.itemsList}>
+                  {order.order_items && order.order_items.map((item, idx) => (
+                    <div key={idx} className={styles.item}>
+                      <img 
+                        src={item.products?.images?.[0] || 'https://placehold.co/100x120?text=No+Image'} 
+                        alt={item.products?.name || 'Product'} 
+                      />
+                      <div className={styles.itemInfo}>
+                        <h4>{item.products?.name || 'Unknown Product'}</h4>
+                        <p>Size: {item.size}</p>
+                        <p>Qty: {item.quantity}</p>
+                      </div>
+                      <div className={styles.itemActions}>
+                        <Link href={`/product/${item.product_id}`} className={styles.actionBtn}>
+                          Buy Again
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
