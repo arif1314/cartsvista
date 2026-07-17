@@ -49,7 +49,7 @@ export default function Navbar() {
     let isMounted = true;
     async function loadMenuProducts() {
       try {
-        const response = await fetch(`/api/products?category=${encodeURIComponent(activeMenu)}&limit=8`);
+        const response = await fetch(`/api/products?category=${encodeURIComponent(activeMenu)}&limit=48`);
         const data = await response.json();
         if (isMounted && response.ok && data.success) {
           setMenuProducts((current) => ({

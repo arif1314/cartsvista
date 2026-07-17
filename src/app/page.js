@@ -7,20 +7,11 @@ import { useBlogs } from '@/context/BlogContext';
 import ProductCard from '@/components/ProductCard';
 import styles from './page.module.css';
 
-function displayCategoryTitle(category) {
-  const value = String(category.title || category.name || '').trim();
-  if (category.slug === 'men' || value.toLowerCase() === 'men') return 'Menswear';
-  if (category.slug === 'women' || value.toLowerCase() === 'women') return 'Womenswear';
-  if (category.slug === 'kids' || value.toLowerCase() === 'kids') return 'Kids Collection';
-  return value;
-}
-
 export default function Home() {
   const { slides, promo2, promo3, promo4 } = usePromos();
   const { articles } = useBlogs();
   const [activeSlide, setActiveSlide] = useState(0);
   const [latestProducts, setLatestProducts] = useState([]);
-  const [homeCategories, setHomeCategories] = useState([]);
 
   const reviews = [
     { name: "Liam Smith", rating: 5, loc: "London, UK", text: "The fabric feels premium, and the fit was exactly as described.", date: "Recent order", purchasedItem: "Premium Thobe" },
@@ -53,54 +44,6 @@ export default function Home() {
     }
 
     loadLatestProducts();
-  }, []);
-
-  useEffect(() => {
-    async function loadHomeCategories() {
-      try {
-        const [categoryResponse, productResponse] = await Promise.all([
-          fetch('/api/categories'),
-          fetch('/api/products?category=men&limit=48'),
-        ]);
-        const [categoryData, productData] = await Promise.all([
-          categoryResponse.json(),
-          productResponse.json(),
-        ]);
-
-        if (!categoryResponse.ok || !categoryData.success) return;
-
-        const products = productResponse.ok && productData.success ? productData.products || [] : [];
-        const productsBySubcategory = products.reduce((map, product) => {
-          const key = String(product.subcategory || '').toLowerCase();
-          if (key && !map.has(key)) map.set(key, product);
-          return map;
-        }, new Map());
-
-        const sections = (categoryData.categories || [])
-          .filter((category) => category.children?.length > 0)
-          .map((category) => ({
-            title: displayCategoryTitle(category),
-            slug: category.slug,
-            collections: category.children
-              .filter((child) => child.isActive)
-              .map((child) => {
-                const product = productsBySubcategory.get(String(child.name).toLowerCase());
-                return {
-                  name: child.name,
-                  slug: child.slug,
-                  image: product?.image || product?.images?.[0] || '/store.png',
-                };
-              }),
-          }))
-          .filter((section) => section.collections.length > 0);
-
-        setHomeCategories(sections);
-      } catch {
-        setHomeCategories([]);
-      }
-    }
-
-    loadHomeCategories();
   }, []);
 
   return (
@@ -181,15 +124,45 @@ export default function Home() {
         </div>
       </section>
 
-      {homeCategories.map((category, index) => (
-        <CategorySection
-          key={category.slug}
-          title={category.title}
-          slug={category.slug}
-          index={String(index + 1).padStart(2, '0')}
-          collections={category.collections}
-        />
-      ))}
+      {/* 2. Category: Menswear */}
+      <CategorySection title="Menswear" index="01" collections={[
+        { name: "Thobe", image: "https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?q=80&w=1780" },
+        { name: "Kabli", image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=1887" },
+        { name: "Panjabi", image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=2071" },
+        { name: "Sherwani", image: "https://images.unsplash.com/photo-1550639524-a6f58345a278?q=80&w=1926" }
+      ]} />
+
+      {/* 3. Category: Womenswear */}
+      <CategorySection title="Womenswear" index="02" collections={[
+        { name: "Abaya", image: "https://images.unsplash.com/photo-1589156229687-496a31ad1d1f?q=80&w=1886" },
+        { name: "Tops And Shirts", image: "https://images.unsplash.com/photo-1434389678369-183314aa6e1c?q=80&w=1948" },
+        { name: "Dress And Dress Set", image: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?q=80&w=1946" },
+        { name: "Scarf", image: "https://images.unsplash.com/photo-1584916201218-f4242ceb4809?q=80&w=1915" }
+      ]} />
+
+      {/* 4. Category: Kidswear */}
+      <CategorySection title="Kidswear" index="03" collections={[
+        { name: "Girls", image: "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?q=80&w=2015" },
+        { name: "Boys", image: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?q=80&w=1972" },
+        { name: "Mother And Daughter Collection", image: "https://images.unsplash.com/photo-1478146896981-b80fe463b330?q=80&w=2070" },
+        { name: "Father and Son Collection", image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=2070" }
+      ]} />
+
+      {/* 5. Category: Fragrance */}
+      <CategorySection title="Fragrance" index="04" collections={[
+        { name: "Premium", image: "https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=1904" },
+        { name: "Luxury", image: "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=1887" },
+        { name: "Al Haramain", image: "https://images.unsplash.com/photo-1595425970377-c9703bc48b2d?q=80&w=1935" },
+        { name: "Best Selling", image: "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=1887" }
+      ]} />
+
+      {/* 6. Category: Accessories */}
+      <CategorySection title="Accessories" index="05" collections={[
+        { name: "Bags", image: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?q=80&w=1938" },
+        { name: "Home Decor", image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=2069" },
+        { name: "Watches", image: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?q=80&w=2080" },
+        { name: "Wallets", image: "https://images.unsplash.com/photo-1627123424574-724758594e93?q=80&w=1888" }
+      ]} />
 
       {latestProducts.length > 0 && (
         <section className={styles.latestProductsSection}>
@@ -437,7 +410,7 @@ export default function Home() {
   );
 }
 
-function CategorySection({ title, slug, collections, index }) {
+function CategorySection({ title, collections, index }) {
   return (
     <section className={styles.categorySection}>
       <div className={styles.sectionHeader}>
@@ -445,13 +418,13 @@ function CategorySection({ title, slug, collections, index }) {
           <span className={styles.sectionIndex}>{index}</span>
           <h2>{title}</h2>
         </div>
-        <Link href={`/c/${slug}`} className={styles.exploreLink}>
+        <Link href={`/c/${title.toLowerCase()}`} className={styles.exploreLink}>
           Explore All
         </Link>
       </div>
       <CarouselWrapper className={styles.collectionGrid}>
         {collections.map((col, i) => (
-          <Link href={`/c/${slug}?subcategory=${encodeURIComponent(col.name)}`} key={i} className={styles.collectionCard}>
+          <Link href={`/c/${title.toLowerCase()}`} key={i} className={styles.collectionCard}>
             <img src={col.image} alt={col.name} />
             <div className={styles.collectionOverlay}>
               <h3>{col.name}</h3>
