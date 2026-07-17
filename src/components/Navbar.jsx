@@ -1,18 +1,20 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Search, User, ShoppingBag, Heart, Mail, Phone, ChevronDown } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useCategory } from '@/context/CategoryContext';
 import SearchModal from '@/components/SearchModal';
+import { formatCurrency } from '@/lib/format/currency';
 import styles from './Navbar.module.css';
 
 export default function Navbar() {
   const [activeMenu, setActiveMenu] = useState(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLangPopupOpen, setIsLangPopupOpen] = useState(false);
+  const [menuProducts, setMenuProducts] = useState({});
   const { cartCount, setIsCartOpen } = useCart();
   const { wishlistCount } = useWishlist();
   const { categories } = useCategory();
@@ -21,6 +23,33 @@ export default function Navbar() {
     id,
     label: category.title
   }));
+
+  useEffect(() => {
+    if (!activeMenu || menuProducts[activeMenu]) return;
+
+    let isMounted = true;
+    async function loadMenuProducts() {
+      try {
+        const response = await fetch(`/api/products?category=${encodeURIComponent(activeMenu)}&limit=8`);
+        const data = await response.json();
+        if (isMounted && response.ok && data.success) {
+          setMenuProducts((current) => ({
+            ...current,
+            [activeMenu]: data.products || [],
+          }));
+        }
+      } catch {
+        if (isMounted) {
+          setMenuProducts((current) => ({ ...current, [activeMenu]: [] }));
+        }
+      }
+    }
+
+    loadMenuProducts();
+    return () => {
+      isMounted = false;
+    };
+  }, [activeMenu, menuProducts]);
 
   return (
     <div className={styles.navWrapper} onMouseLeave={() => setActiveMenu(null)}>
@@ -121,7 +150,15 @@ export default function Navbar() {
             
             {/* Right Content Area */}
             <div className={styles.megaContent}>
-              <h2 className={styles.megaTitle}>{categories[activeMenu].title}</h2>
+              <div className={styles.megaHeader}>
+                <div>
+                  <h2 className={styles.megaTitle}>{categories[activeMenu].title}</h2>
+                  <p className={styles.megaSubtitle}>Explore latest arrivals from this category.</p>
+                </div>
+                <Link href={`/c/${activeMenu}`} className={styles.megaViewAll}>
+                  View all
+                </Link>
+              </div>
               <div className={styles.megaGrid}>
                 {/* Subcategories List */}
                 <div className={styles.subcatList}>
@@ -137,6 +174,33 @@ export default function Navbar() {
                       {sub}
                     </Link>
                   ))}
+                </div>
+
+                <div className={styles.megaProductArea}>
+                  {(menuProducts[activeMenu] || []).length > 0 ? (
+                    <div className={styles.megaProductGrid}>
+                      {(menuProducts[activeMenu] || []).slice(0, 6).map((product) => (
+                        <Link
+                          key={product.id}
+                          href={`/product/${product.id}`}
+                          className={styles.megaProductCard}
+                        >
+                          <div className={styles.megaProductImage}>
+                            <img src={product.image || product.images?.[0]} alt={product.name} />
+                          </div>
+                          <div className={styles.megaProductInfo}>
+                            <span>{product.subcategory || categories[activeMenu].title}</span>
+                            <h3>{product.name}</h3>
+                            <p>{formatCurrency(product.price)}</p>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={styles.megaEmptyState}>
+                      <p>New arrivals will appear here once products are published.</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
