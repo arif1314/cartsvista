@@ -12,6 +12,7 @@ function normalizeCategory(value) {
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const category = normalizeCategory(searchParams.get('category'));
+  const subcategory = String(searchParams.get('subcategory') || '').trim().slice(0, 80);
   const queryText = String(searchParams.get('q') || '').trim().slice(0, 80);
   const limit = Math.min(48, Math.max(1, Number(searchParams.get('limit')) || 24));
 
@@ -26,6 +27,11 @@ export async function GET(request) {
   if (category) {
     const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
     query = query.or(`category.ilike.%${categoryName}%,subcategory.ilike.%${categoryName}%`);
+  }
+
+  if (subcategory) {
+    const safeSubcategory = subcategory.replaceAll('%', '').replaceAll(',', ' ');
+    query = query.ilike('subcategory', safeSubcategory);
   }
 
   if (queryText) {

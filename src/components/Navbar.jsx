@@ -32,9 +32,8 @@ export default function Navbar() {
       : activeCategory.collections || [])
     : [];
   const selectedSubcategory = activeSubcategory || activeSubcategories[0] || '';
-  const selectedProducts = (menuProducts[activeMenu] || [])
-    .filter((product) => !selectedSubcategory || product.subcategory === selectedSubcategory)
-    .slice(0, 6);
+  const productCacheKey = activeMenu && selectedSubcategory ? `${activeMenu}:${selectedSubcategory}` : activeMenu;
+  const selectedProducts = (menuProducts[productCacheKey] || []).slice(0, 6);
 
   const activateMenu = (id) => {
     const nextCategory = categories[id];
@@ -44,22 +43,25 @@ export default function Navbar() {
   };
 
   useEffect(() => {
-    if (!activeMenu || menuProducts[activeMenu]) return;
+    if (!activeMenu || !productCacheKey || menuProducts[productCacheKey]) return;
 
     let isMounted = true;
     async function loadMenuProducts() {
       try {
-        const response = await fetch(`/api/products?category=${encodeURIComponent(activeMenu)}&limit=48`);
+        const subcategoryParam = selectedSubcategory
+          ? `&subcategory=${encodeURIComponent(selectedSubcategory)}`
+          : '';
+        const response = await fetch(`/api/products?category=${encodeURIComponent(activeMenu)}${subcategoryParam}&limit=6`);
         const data = await response.json();
         if (isMounted && response.ok && data.success) {
           setMenuProducts((current) => ({
             ...current,
-            [activeMenu]: data.products || [],
+            [productCacheKey]: data.products || [],
           }));
         }
       } catch {
         if (isMounted) {
-          setMenuProducts((current) => ({ ...current, [activeMenu]: [] }));
+          setMenuProducts((current) => ({ ...current, [productCacheKey]: [] }));
         }
       }
     }
@@ -68,7 +70,7 @@ export default function Navbar() {
     return () => {
       isMounted = false;
     };
-  }, [activeMenu, menuProducts]);
+  }, [activeMenu, selectedSubcategory, productCacheKey, menuProducts]);
 
   return (
     <div
