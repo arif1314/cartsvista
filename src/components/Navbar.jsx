@@ -12,6 +12,7 @@ import styles from './Navbar.module.css';
 
 export default function Navbar() {
   const [activeMenu, setActiveMenu] = useState(null);
+  const [activeSubcategory, setActiveSubcategory] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLangPopupOpen, setIsLangPopupOpen] = useState(false);
   const [menuProducts, setMenuProducts] = useState({});
@@ -23,6 +24,24 @@ export default function Navbar() {
     id,
     label: category.title
   }));
+
+  const activeCategory = activeMenu ? categories[activeMenu] : null;
+  const activeSubcategories = activeCategory
+    ? (activeCategory.children?.length
+      ? activeCategory.children.map((child) => child.name)
+      : activeCategory.collections || [])
+    : [];
+  const selectedSubcategory = activeSubcategory || activeSubcategories[0] || '';
+  const selectedProducts = (menuProducts[activeMenu] || [])
+    .filter((product) => !selectedSubcategory || product.subcategory === selectedSubcategory)
+    .slice(0, 6);
+
+  const activateMenu = (id) => {
+    const nextCategory = categories[id];
+    const firstSubcategory = nextCategory?.children?.[0]?.name || nextCategory?.collections?.[0] || '';
+    setActiveMenu(id);
+    setActiveSubcategory(firstSubcategory);
+  };
 
   useEffect(() => {
     if (!activeMenu || menuProducts[activeMenu]) return;
@@ -52,7 +71,13 @@ export default function Navbar() {
   }, [activeMenu, menuProducts]);
 
   return (
-    <div className={styles.navWrapper} onMouseLeave={() => setActiveMenu(null)}>
+    <div
+      className={styles.navWrapper}
+      onMouseLeave={() => {
+        setActiveMenu(null);
+        setActiveSubcategory('');
+      }}
+    >
       <header className={styles.header}>
         {/* Top Bar */}
         <div className={styles.topBar}>
@@ -103,7 +128,7 @@ export default function Navbar() {
               <div 
                 key={item.id}
                 className={`${styles.navItem} ${activeMenu === item.id ? styles.navItemActive : ''}`}
-                onMouseEnter={() => setActiveMenu(item.id)}
+                onMouseEnter={() => activateMenu(item.id)}
               >
                 <Link href={`/c/${item.id}`}>{item.label}</Link>
               </div>
@@ -132,8 +157,8 @@ export default function Navbar() {
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       {/* Megamenu Dropdown */}
-      <div className={`${styles.megaMenu} ${activeMenu && categories[activeMenu] ? styles.megaMenuOpen : ''}`}>
-        {activeMenu && categories[activeMenu] && (
+      <div className={`${styles.megaMenu} ${activeCategory ? styles.megaMenuOpen : ''}`}>
+        {activeMenu && activeCategory && (
           <div className={styles.megaMenuInner}>
             {/* Left Sidebar Menu */}
             <div className={styles.megaSidebar}>
@@ -141,7 +166,7 @@ export default function Navbar() {
                 <div 
                   key={item.id} 
                   className={`${styles.sidebarItem} ${activeMenu === item.id ? styles.sidebarItemActive : ''}`}
-                  onMouseEnter={() => setActiveMenu(item.id)}
+                  onMouseEnter={() => activateMenu(item.id)}
                 >
                   {item.label}
                 </div>
@@ -152,8 +177,12 @@ export default function Navbar() {
             <div className={styles.megaContent}>
               <div className={styles.megaHeader}>
                 <div>
-                  <h2 className={styles.megaTitle}>{categories[activeMenu].title}</h2>
-                  <p className={styles.megaSubtitle}>Explore latest arrivals from this category.</p>
+                  <h2 className={styles.megaTitle}>{activeCategory.title}</h2>
+                  <p className={styles.megaSubtitle}>
+                    {selectedSubcategory
+                      ? `Latest ${selectedSubcategory} arrivals.`
+                      : 'Explore latest arrivals from this category.'}
+                  </p>
                 </div>
                 <Link href={`/c/${activeMenu}`} className={styles.megaViewAll}>
                   View all
@@ -162,14 +191,13 @@ export default function Navbar() {
               <div className={styles.megaGrid}>
                 {/* Subcategories List */}
                 <div className={styles.subcatList}>
-                  {(categories[activeMenu].children?.length
-                    ? categories[activeMenu].children.map((child) => child.name)
-                    : categories[activeMenu].collections || []
-                  ).map(sub => (
+                  {activeSubcategories.map(sub => (
                     <Link
                       key={sub}
                       href={`/c/${activeMenu}?subcategory=${encodeURIComponent(sub)}`}
-                      className={styles.subcatLink}
+                      className={`${styles.subcatLink} ${selectedSubcategory === sub ? styles.subcatLinkActive : ''}`}
+                      onMouseEnter={() => setActiveSubcategory(sub)}
+                      onFocus={() => setActiveSubcategory(sub)}
                     >
                       {sub}
                     </Link>
@@ -177,9 +205,9 @@ export default function Navbar() {
                 </div>
 
                 <div className={styles.megaProductArea}>
-                  {(menuProducts[activeMenu] || []).length > 0 ? (
+                  {selectedProducts.length > 0 ? (
                     <div className={styles.megaProductGrid}>
-                      {(menuProducts[activeMenu] || []).slice(0, 6).map((product) => (
+                      {selectedProducts.map((product) => (
                         <Link
                           key={product.id}
                           href={`/product/${product.id}`}
@@ -189,7 +217,7 @@ export default function Navbar() {
                             <img src={product.image || product.images?.[0]} alt={product.name} />
                           </div>
                           <div className={styles.megaProductInfo}>
-                            <span>{product.subcategory || categories[activeMenu].title}</span>
+                            <span>{product.subcategory || activeCategory.title}</span>
                             <h3>{product.name}</h3>
                             <p>{formatCurrency(product.price)}</p>
                           </div>

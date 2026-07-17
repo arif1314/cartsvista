@@ -379,11 +379,24 @@
   font-size: 0.875rem;
   color: var(--primary);
   font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
-.subcatLink:hover {
-  text-decoration: underline;
-  text-underline-offset: 4px;
+.subcatLink:hover,
+.subcatLinkActive {
+  background: #f5f1ea;
+  color: #121212;
+  transform: translateX(2px);
+}
+
+.subcatLinkActive {
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .megaProductArea {
