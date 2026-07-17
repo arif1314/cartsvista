@@ -12,6 +12,7 @@ export default function Home() {
   const { articles } = useBlogs();
   const [activeSlide, setActiveSlide] = useState(0);
   const [latestProducts, setLatestProducts] = useState([]);
+  const [menswearProducts, setMenswearProducts] = useState([]);
 
   const reviews = [
     { name: "Liam Smith", rating: 5, loc: "London, UK", text: "The fabric feels premium, and the fit was exactly as described.", date: "Recent order", purchasedItem: "Premium Thobe" },
@@ -45,6 +46,28 @@ export default function Home() {
 
     loadLatestProducts();
   }, []);
+
+  useEffect(() => {
+    async function loadMenswearProducts() {
+      try {
+        const response = await fetch('/api/products?category=men&limit=12');
+        const data = await response.json();
+        if (response.ok && data.success) {
+          setMenswearProducts(data.products || []);
+        }
+      } catch {
+        setMenswearProducts([]);
+      }
+    }
+
+    loadMenswearProducts();
+  }, []);
+
+  const menswearCollections = menswearProducts.map((product) => ({
+    name: product.name,
+    image: product.image || product.images?.[0],
+    href: `/product/${product.id}`,
+  }));
 
   return (
     <main className={styles.main}>
@@ -125,12 +148,7 @@ export default function Home() {
       </section>
 
       {/* 2. Category: Menswear */}
-      <CategorySection title="Menswear" index="01" collections={[
-        { name: "Thobe", image: "https://images.unsplash.com/photo-1593030761757-71fae45fa0e7?q=80&w=1780" },
-        { name: "Kabli", image: "https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=1887" },
-        { name: "Panjabi", image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=2071" },
-        { name: "Sherwani", image: "https://images.unsplash.com/photo-1550639524-a6f58345a278?q=80&w=1926" }
-      ]} />
+      <CategorySection title="Menswear" index="01" href="/c/men" collections={menswearCollections} />
 
       {/* 3. Category: Womenswear */}
       <CategorySection title="Womenswear" index="02" collections={[
@@ -410,7 +428,9 @@ export default function Home() {
   );
 }
 
-function CategorySection({ title, collections, index }) {
+function CategorySection({ title, collections, index, href }) {
+  if (!collections || collections.length === 0) return null;
+
   return (
     <section className={styles.categorySection}>
       <div className={styles.sectionHeader}>
@@ -418,13 +438,13 @@ function CategorySection({ title, collections, index }) {
           <span className={styles.sectionIndex}>{index}</span>
           <h2>{title}</h2>
         </div>
-        <Link href={`/c/${title.toLowerCase()}`} className={styles.exploreLink}>
+        <Link href={href || `/c/${title.toLowerCase()}`} className={styles.exploreLink}>
           Explore All
         </Link>
       </div>
       <CarouselWrapper className={styles.collectionGrid}>
         {collections.map((col, i) => (
-          <Link href={`/c/${title.toLowerCase()}`} key={i} className={styles.collectionCard}>
+          <Link href={col.href || href || `/c/${title.toLowerCase()}`} key={`${col.name}-${i}`} className={styles.collectionCard}>
             <img src={col.image} alt={col.name} />
             <div className={styles.collectionOverlay}>
               <h3>{col.name}</h3>
