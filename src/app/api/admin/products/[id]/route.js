@@ -79,6 +79,45 @@ export async function DELETE(request, context) {
 
   const { id } = await context.params;
   const admin = createSupabaseAdminClient();
+  const { data: existingProduct, error: existingError } = await admin
+    .from('products')
+    .select('id,name')
+    .eq('id', id)
+    .single();
+
+  if (existingError) return fail('Product not found.', 404);
+
+  const { count: orderItemCount, error: countError } = await admin
+    .from('order_items')
+    .select('id', { count: 'exact', head: true })
+    .eq('product_id', id);
+
+  if (countError) return fail(countError.message, 500);
+
+  if (Number(orderItemCount || 0) === 0) {
+    await Promise.all([
+      admin.from('stock_movements').delete().eq('product_id', id),
+      admin.from('wishlist_items').delete().eq('product_id', id),
+    ]);
+
+    const { error: deleteError } = await admin
+      .from('products')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) return fail(deleteError.message, 500);
+
+    await admin.from('audit_logs').insert({
+      actor_id: auth.user.id,
+      action: 'product.delete',
+      entity_type: 'product',
+      entity_id: id,
+      metadata: { name: existingProduct.name },
+    });
+
+    return ok({ deleted: true, product: { id, name: existingProduct.name } });
+  }
+
   const { data, error } = await admin
     .from('products')
     .update({ status: 'archived' })
@@ -86,7 +125,7 @@ export async function DELETE(request, context) {
     .select('*')
     .single();
 
-  if (error) return fail(error.message, 500);
+  if (error) return fail(`${error.message}. This product has order history, so it must be archived instead of permanently deleted.`, 500);
 
   await admin.from('audit_logs').insert({
     actor_id: auth.user.id,

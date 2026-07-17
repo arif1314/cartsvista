@@ -81,6 +81,9 @@ export default function ProductImageManager({
           <button type="button" className={styles.imageUrlBtn} onClick={addUrl}>
             Add URL
           </button>
+          <a href="/admin/media" target="_blank" rel="noopener noreferrer" className={styles.imageUrlBtn}>
+            Image Library
+          </a>
         </div>
       </div>
 

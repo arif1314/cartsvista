@@ -1,118 +1,116 @@
 "use client";
-import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { Plus, Trash2, RefreshCw } from 'lucide-react';
+
+import { useEffect, useMemo, useState } from 'react';
+import { Plus, RefreshCw, Trash2 } from 'lucide-react';
 import styles from './page.module.css';
 
+function slugify(value) {
+  return String(value || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
 export default function AdminCategories() {
-  const [categories, setCategories] = useState({});
+  const [categories, setCategories] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  
-  const [newCatSlug, setNewCatSlug] = useState("");
-  const [newCatTitle, setNewCatTitle] = useState("");
-  
-  const [newSubcatName, setNewSubcatName] = useState("");
-  const [selectedCatForSub, setSelectedCatForSub] = useState("");
+  const [message, setMessage] = useState('');
+
+  const [newCatSlug, setNewCatSlug] = useState('');
+  const [newCatTitle, setNewCatTitle] = useState('');
+
+  const [newSubcatName, setNewSubcatName] = useState('');
+  const [selectedCatForSub, setSelectedCatForSub] = useState('');
+
+  const activeCategories = useMemo(
+    () => categories.filter((category) => category.isActive),
+    [categories]
+  );
 
   const fetchCategories = async () => {
     setIsLoaded(false);
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .order('sort_order', { ascending: true });
-      
-    if (!error && data) {
-      const catObj = {};
-      data.forEach(cat => {
-        catObj[cat.slug] = {
-          id: cat.id,
-          title: cat.title,
-          collections: cat.collections || []
-        };
-      });
-      setCategories(catObj);
+    setMessage('');
+    try {
+      const response = await fetch('/api/admin/categories');
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'Unable to load categories.');
+      setCategories(data.categories || []);
+    } catch (error) {
+      setMessage(error.message);
+      setCategories([]);
+    } finally {
+      setIsLoaded(true);
     }
-    setIsLoaded(true);
   };
 
   useEffect(() => {
     fetchCategories();
   }, []);
 
-  const handleAddCategory = async (e) => {
-    e.preventDefault();
-    if (!newCatSlug || !newCatTitle) return;
-    
-    const slug = newCatSlug.toLowerCase().replace(/\s+/g, '-');
-    const supabase = createClient();
-    
-    const { error } = await supabase
-      .from('categories')
-      .insert([{ slug, title: newCatTitle, collections: [] }]);
-      
-    if (!error) {
-      setNewCatSlug("");
-      setNewCatTitle("");
+  const handleAddCategory = async (event) => {
+    event.preventDefault();
+    if (!newCatTitle.trim()) return;
+
+    try {
+      const response = await fetch('/api/admin/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newCatTitle.trim(),
+          slug: newCatSlug.trim() || slugify(newCatTitle),
+          parentId: null,
+          isActive: true,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'Failed to add category.');
+
+      setNewCatSlug('');
+      setNewCatTitle('');
+      setMessage('Category added.');
       fetchCategories();
-    } else {
-      alert("Failed to add category.");
+    } catch (error) {
+      setMessage(error.message);
     }
   };
 
-  const handleDeleteCategory = async (slug) => {
-    const supabase = createClient();
-    const { error } = await supabase
-      .from('categories')
-      .delete()
-      .eq('slug', slug);
-      
-    if (!error) {
+  const handleDeleteCategory = async (id) => {
+    try {
+      const response = await fetch(`/api/admin/categories/${id}`, { method: 'DELETE' });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'Failed to archive category.');
+      setMessage('Category archived.');
       fetchCategories();
-    } else {
-      alert("Failed to delete category.");
+    } catch (error) {
+      setMessage(error.message);
     }
   };
 
-  const handleAddSubcategory = async (e) => {
-    e.preventDefault();
-    if (!selectedCatForSub || !newSubcatName) return;
-    
-    const parentCat = categories[selectedCatForSub];
-    if (!parentCat) return;
+  const handleAddSubcategory = async (event) => {
+    event.preventDefault();
+    if (!selectedCatForSub || !newSubcatName.trim()) return;
 
-    const newCollections = [...parentCat.collections, newSubcatName];
-    
-    const supabase = createClient();
-    const { error } = await supabase
-      .from('categories')
-      .update({ collections: newCollections, updated_at: new Date().toISOString() })
-      .eq('slug', selectedCatForSub);
-      
-    if (!error) {
-      setNewSubcatName("");
+    try {
+      const response = await fetch('/api/admin/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newSubcatName.trim(),
+          slug: slugify(`${activeCategories.find((cat) => cat.id === selectedCatForSub)?.slug || 'category'}-${newSubcatName}`),
+          parentId: selectedCatForSub,
+          isActive: true,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'Failed to add subcategory.');
+
+      setNewSubcatName('');
+      setMessage('Subcategory added.');
       fetchCategories();
-    } else {
-      alert("Failed to add subcategory.");
-    }
-  };
-
-  const handleDeleteSubcategory = async (slug, subcatName) => {
-    const parentCat = categories[slug];
-    if (!parentCat) return;
-
-    const newCollections = parentCat.collections.filter(c => c !== subcatName);
-    
-    const supabase = createClient();
-    const { error } = await supabase
-      .from('categories')
-      .update({ collections: newCollections, updated_at: new Date().toISOString() })
-      .eq('slug', slug);
-      
-    if (!error) {
-      fetchCategories();
-    } else {
-      alert("Failed to delete subcategory.");
+    } catch (error) {
+      setMessage(error.message);
     }
   };
 
@@ -130,39 +128,42 @@ export default function AdminCategories() {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>Categories</h1>
-          <p className={styles.subtitle}>Manage your store navigation and category structure</p>
+          <p className={styles.subtitle}>Manage your store navigation, product categories, and subcategories.</p>
         </div>
+        <button type="button" className={styles.addBtn} onClick={fetchCategories}>
+          <RefreshCw size={16} /> Refresh
+        </button>
       </div>
 
+      {message && <div className={styles.card}>{message}</div>}
+
       <div className={styles.grid}>
-        {/* Left Column: Management Forms */}
         <div className={styles.formsColumn}>
-          
           <div className={styles.card}>
             <h3>Add New Category</h3>
-            <p className={styles.cardDesc}>Creates a new main menu item in the navigation bar.</p>
+            <p className={styles.cardDesc}>Creates a top-level category for navigation and product organization.</p>
             <form onSubmit={handleAddCategory} className={styles.form}>
               <div className={styles.formGroup}>
-                <label>Category Title (e.g. Winter Collection)</label>
-                <input 
-                  type="text" 
-                  value={newCatTitle} 
-                  onChange={(e) => {
-                    setNewCatTitle(e.target.value);
-                    if (!newCatSlug || newCatSlug === newCatTitle.toLowerCase().replace(/\s+/g, '-').slice(0, -1)) {
-                      setNewCatSlug(e.target.value.toLowerCase().replace(/\s+/g, '-'));
-                    }
+                <label>Category Name</label>
+                <input
+                  type="text"
+                  value={newCatTitle}
+                  onChange={(event) => {
+                    setNewCatTitle(event.target.value);
+                    setNewCatSlug((current) => current ? current : slugify(event.target.value));
                   }}
-                  required 
+                  placeholder="Menswear"
+                  required
                 />
               </div>
               <div className={styles.formGroup}>
-                <label>URL Slug (e.g. winter)</label>
-                <input 
-                  type="text" 
-                  value={newCatSlug} 
-                  onChange={(e) => setNewCatSlug(e.target.value)}
-                  required 
+                <label>URL Slug</label>
+                <input
+                  type="text"
+                  value={newCatSlug}
+                  onChange={(event) => setNewCatSlug(slugify(event.target.value))}
+                  placeholder="menswear"
+                  required
                 />
               </div>
               <button type="submit" className={styles.addBtn}>
@@ -173,28 +174,29 @@ export default function AdminCategories() {
 
           <div className={styles.card}>
             <h3>Add Subcategory</h3>
-            <p className={styles.cardDesc}>Adds a sub-item to the mega menu dropdown.</p>
+            <p className={styles.cardDesc}>Subcategories created here will appear in the product add/edit form.</p>
             <form onSubmit={handleAddSubcategory} className={styles.form}>
               <div className={styles.formGroup}>
                 <label>Parent Category</label>
-                <select 
-                  value={selectedCatForSub} 
-                  onChange={(e) => setSelectedCatForSub(e.target.value)}
+                <select
+                  value={selectedCatForSub}
+                  onChange={(event) => setSelectedCatForSub(event.target.value)}
                   required
                 >
                   <option value="">Select a category</option>
-                  {Object.entries(categories).map(([slug, cat]) => (
-                    <option key={slug} value={slug}>{cat.title}</option>
+                  {activeCategories.map((category) => (
+                    <option key={category.id} value={category.id}>{category.name}</option>
                   ))}
                 </select>
               </div>
               <div className={styles.formGroup}>
-                <label>Subcategory Name (e.g. Jackets)</label>
-                <input 
-                  type="text" 
-                  value={newSubcatName} 
-                  onChange={(e) => setNewSubcatName(e.target.value)}
-                  required 
+                <label>Subcategory Name</label>
+                <input
+                  type="text"
+                  value={newSubcatName}
+                  onChange={(event) => setNewSubcatName(event.target.value)}
+                  placeholder="Shirts"
+                  required
                 />
               </div>
               <button type="submit" className={styles.addBtn}>
@@ -202,43 +204,47 @@ export default function AdminCategories() {
               </button>
             </form>
           </div>
-
         </div>
 
-        {/* Right Column: Current Structure */}
         <div className={styles.previewColumn}>
           <div className={styles.card}>
             <h3>Current Category Structure</h3>
-            <p className={styles.cardDesc}>This reflects exactly what customers see on the front end.</p>
-            
+            <p className={styles.cardDesc}>Inactive categories are hidden from product selection and storefront navigation.</p>
+
             <div className={styles.categoryList}>
-              {Object.entries(categories).map(([slug, cat]) => (
-                <div key={slug} className={styles.categoryItem}>
+              {activeCategories.length === 0 ? (
+                <p className={styles.emptySub}>No active categories found.</p>
+              ) : activeCategories.map((category) => (
+                <div key={category.id} className={styles.categoryItem}>
                   <div className={styles.categoryHeader}>
                     <div>
-                      <h4>{cat.title}</h4>
-                      <span className={styles.slug}>/c/{slug}</span>
+                      <h4>{category.name}</h4>
+                      <span className={styles.slug}>/c/{category.slug}</span>
                     </div>
-                    <button 
+                    <button
+                      type="button"
                       className={styles.deleteBtn}
                       onClick={() => {
-                        if(confirm("Are you sure you want to delete this category?")) handleDeleteCategory(slug)
+                        if (confirm('Archive this category?')) handleDeleteCategory(category.id);
                       }}
-                      title="Delete Category"
+                      title="Archive category"
                     >
                       <Trash2 size={16} />
                     </button>
                   </div>
-                  
-                  {cat.collections && cat.collections.length > 0 ? (
+
+                  {category.children?.length > 0 ? (
                     <ul className={styles.subcatList}>
-                      {cat.collections.map((sub, idx) => (
-                        <li key={idx}>
-                          <span>{sub}</span>
-                          <button 
+                      {category.children.filter((child) => child.isActive).map((child) => (
+                        <li key={child.id}>
+                          <span>{child.name}</span>
+                          <button
+                            type="button"
                             className={styles.deleteSubBtn}
-                            onClick={() => handleDeleteSubcategory(slug, sub)}
-                            title="Remove Subcategory"
+                            onClick={() => {
+                              if (confirm('Archive this subcategory?')) handleDeleteCategory(child.id);
+                            }}
+                            title="Archive subcategory"
                           >
                             &times;
                           </button>
@@ -251,7 +257,6 @@ export default function AdminCategories() {
                 </div>
               ))}
             </div>
-            
           </div>
         </div>
       </div>

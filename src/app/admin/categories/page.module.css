@@ -120,6 +120,24 @@
   background: #333;
 }
 
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #666;
+  padding: 2rem;
+}
+
+.spinner {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Category List Styles */
 .categoryList {
   display: flex;

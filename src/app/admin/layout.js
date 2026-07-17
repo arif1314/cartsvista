@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Bell, Tag, FileText, MessageSquare, Percent, Truck } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Bell, Tag, FileText, MessageSquare, Percent, Truck, Images } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import styles from './layout.module.css';
 
@@ -43,6 +43,7 @@ export default function AdminLayout({ children }) {
   const navItems = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
     { href: '/admin/products', label: 'Products', icon: Package, exact: false },
+    { href: '/admin/media', label: 'Image Library', icon: Images, exact: false },
     { href: '/admin/categories', label: 'Categories', icon: Package, exact: false },
     { href: '/admin/brands', label: 'Brands', icon: Tag, exact: false },
     { href: '/admin/promos', label: 'Promotions', icon: Tag, exact: false },
