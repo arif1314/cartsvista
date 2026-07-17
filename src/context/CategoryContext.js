@@ -1,8 +1,15 @@
 "use client";
 import { createContext, useContext, useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
 
 const CategoryContext = createContext();
+
+function displayCategoryTitle(category) {
+  const value = String(category.title || category.name || '').trim();
+  if (category.slug === 'men' || value.toLowerCase() === 'men') return 'Menswear';
+  if (category.slug === 'women' || value.toLowerCase() === 'women') return 'Womenswear';
+  if (category.slug === 'kids' || value.toLowerCase() === 'kids') return 'Kids Collection';
+  return value;
+}
 
 export function CategoryProvider({ children }) {
   const [categories, setCategories] = useState({});
@@ -11,18 +18,19 @@ export function CategoryProvider({ children }) {
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from('categories')
-          .select('*')
-          .order('sort_order', { ascending: true });
-          
-        if (!error && data) {
+        const response = await fetch('/api/categories');
+        const data = await response.json();
+
+        if (response.ok && data.success) {
           const catObj = {};
-          data.forEach(cat => {
+          (data.categories || []).forEach(cat => {
             catObj[cat.slug] = {
-              title: cat.title,
-              collections: cat.collections || []
+              id: cat.id,
+              title: displayCategoryTitle(cat),
+              name: cat.name || cat.title,
+              slug: cat.slug,
+              collections: cat.collections || [],
+              children: cat.children || [],
             };
           });
           setCategories(catObj);

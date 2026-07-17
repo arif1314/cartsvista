@@ -125,8 +125,17 @@ export default function Navbar() {
               <div className={styles.megaGrid}>
                 {/* Subcategories List */}
                 <div className={styles.subcatList}>
-                  {categories[activeMenu].collections?.map(sub => (
-                    <Link key={sub} href={`/c/${activeMenu}`} className={styles.subcatLink}>{sub}</Link>
+                  {(categories[activeMenu].children?.length
+                    ? categories[activeMenu].children.map((child) => child.name)
+                    : categories[activeMenu].collections || []
+                  ).map(sub => (
+                    <Link
+                      key={sub}
+                      href={`/c/${activeMenu}?subcategory=${encodeURIComponent(sub)}`}
+                      className={styles.subcatLink}
+                    >
+                      {sub}
+                    </Link>
                   ))}
                 </div>
               </div>

@@ -1,6 +1,7 @@
 "use client";
 import { use, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Filter, ChevronDown } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import { useCategory } from '@/context/CategoryContext';
@@ -8,6 +9,7 @@ import styles from './page.module.css';
 
 export default function CategoryPage({ params }) {
   const resolvedParams = use(params);
+  const searchParams = useSearchParams();
   const categoryStr = resolvedParams.category;
   const { categories } = useCategory();
   
@@ -22,6 +24,7 @@ export default function CategoryPage({ params }) {
   const [selectedSizes, setSelectedSizes] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [sortBy, setSortBy] = useState('Featured');
+  const subcategoryParam = searchParams.get('subcategory') || '';
 
   // Initialize and update products
   useEffect(() => {
@@ -33,7 +36,13 @@ export default function CategoryPage({ params }) {
         const data = await response.json();
         const nextProducts = response.ok && data.success ? data.products || [] : [];
         setProducts(nextProducts);
-        setFilteredProducts(nextProducts);
+        if (subcategoryParam) {
+          setSelectedCategories([subcategoryParam]);
+          setFilteredProducts(nextProducts.filter((product) => product.subcategory === subcategoryParam));
+        } else {
+          setSelectedCategories([]);
+          setFilteredProducts(nextProducts);
+        }
       } catch {
         setProducts([]);
         setFilteredProducts([]);
@@ -42,17 +51,16 @@ export default function CategoryPage({ params }) {
       }
     }
     fetchProducts();
-  }, [categoryStr]);
+  }, [categoryStr, subcategoryParam]);
 
-  // Extract unique subcategories (e.g. Thobe, Abaya, Sherwani)
-  const uniqueSubCategories = Array.from(new Set(products.map(p => p.category)));
+  const uniqueSubCategories = Array.from(new Set(products.map(p => p.subcategory).filter(Boolean)));
 
   const handleApplyFilters = () => {
     let result = [...products];
 
     // 1. Filter by Subcategory
     if (selectedCategories.length > 0) {
-      result = result.filter(product => selectedCategories.includes(product.category));
+      result = result.filter(product => selectedCategories.includes(product.subcategory));
     }
 
     // 2. Filter by Price
