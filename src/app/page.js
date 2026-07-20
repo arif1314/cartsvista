@@ -9,15 +9,6 @@ import styles from './page.module.css';
 
 const FALLBACK_PRODUCT_IMAGE = 'https://placehold.co/600x800/f2f2f2/777777?text=CartsVista';
 
-function formatCategoryTitle(category) {
-  const value = String(category?.title || category?.name || '').trim().toLowerCase();
-  if (value === 'men') return 'Menswear';
-  if (value === 'women') return 'Womenswear';
-  if (value === 'kids') return 'Kids Collection';
-  if (value === 'accessories') return 'Accessories';
-  return category?.title || category?.name || 'Collection';
-}
-
 function categoryHref(category) {
   return `/c/${category.slug || category.name}`;
 }
@@ -52,62 +43,24 @@ export default function Home() {
   }, [slides]);
 
   useEffect(() => {
-    async function loadLatestProducts() {
+    async function loadHomeData() {
+      setIsCatalogLoading(true);
       try {
-        const response = await fetch('/api/products?limit=8');
+        const response = await fetch('/api/home');
         const data = await response.json();
         if (response.ok && data.success) {
-          setLatestProducts(data.products || []);
+          setLatestProducts(data.latestProducts || []);
+          setCatalogSections(data.catalogSections || []);
         }
       } catch {
         setLatestProducts([]);
-      }
-    }
-
-    loadLatestProducts();
-  }, []);
-
-  useEffect(() => {
-    async function loadCatalogSections() {
-      setIsCatalogLoading(true);
-      try {
-        const categoryResponse = await fetch('/api/categories');
-        const categoryData = await categoryResponse.json();
-        const activeCategories = categoryResponse.ok && categoryData.success
-          ? (categoryData.categories || []).filter((category) => category.isActive)
-          : [];
-
-        const sections = await Promise.all(activeCategories.map(async (category) => {
-          const activeSubcategories = (category.children || []).filter((subcategory) => subcategory.isActive);
-          const subcategories = await Promise.all(activeSubcategories.map(async (subcategory) => {
-            const productResponse = await fetch(
-              `/api/products?category=${encodeURIComponent(category.slug || category.name)}&subcategory=${encodeURIComponent(subcategory.name)}&limit=48`
-            );
-            const productData = await productResponse.json();
-            const products = productResponse.ok && productData.success ? productData.products || [] : [];
-
-            return {
-              ...subcategory,
-              products,
-            };
-          }));
-
-          return {
-            ...category,
-            title: formatCategoryTitle(category),
-            subcategories: subcategories.filter((subcategory) => subcategory.products.length > 0),
-          };
-        }));
-
-        setCatalogSections(sections.filter((section) => section.subcategories.length > 0));
-      } catch {
         setCatalogSections([]);
       } finally {
         setIsCatalogLoading(false);
       }
     }
 
-    loadCatalogSections();
+    loadHomeData();
   }, []);
 
   return (
@@ -162,7 +115,7 @@ export default function Home() {
         {/* Right Column: Static Banners */}
         <div className={styles.promoRight}>
           <Link href={promo2.link || "#"} className={`${styles.promoImageWrapper} ${styles.promoTop}`}>
-            <img src={promo2.image} alt={promo2.title} />
+            <img src={promo2.image} alt={promo2.title} loading="lazy" />
             <div className={styles.promoOverlayCenter}>
               <h3>{promo2.subtitle}</h3>
               <h2>{promo2.title}</h2>
@@ -171,7 +124,7 @@ export default function Home() {
           </Link>
           <div className={styles.promoBottomRow}>
             <Link href={promo3.link || "#"} className={styles.promoImageWrapper}>
-              <img src={promo3.image} alt={promo3.title} />
+              <img src={promo3.image} alt={promo3.title} loading="lazy" />
               <div className={styles.promoOverlayCenterDark}>
                 <h3>{promo3.subtitle}</h3>
                 <p>{promo3.title}</p>
@@ -179,7 +132,7 @@ export default function Home() {
               </div>
             </Link>
             <Link href={promo4.link || "#"} className={styles.promoImageWrapper}>
-              <img src={promo4.image} alt={promo4.title} />
+              <img src={promo4.image} alt={promo4.title} loading="lazy" />
               <div className={styles.promoOverlayCenterStyle}>
                 <h2>{promo4.title}</h2>
               </div>
