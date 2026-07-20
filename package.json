@@ -10,7 +10,8 @@
     "dev:all": "npm run dev:website & npm run dev:admin & npm run dev:account",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "optimize:product-images": "node scripts/optimize-product-images.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
@@ -19,7 +20,8 @@
     "lucide-react": "^1.17.0",
     "next": "16.2.9",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "eslint": "^9",

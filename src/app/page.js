@@ -7,12 +7,32 @@ import { useBlogs } from '@/context/BlogContext';
 import ProductCard from '@/components/ProductCard';
 import styles from './page.module.css';
 
+const FALLBACK_PRODUCT_IMAGE = 'https://placehold.co/600x800/f2f2f2/777777?text=CartsVista';
+
+function formatCategoryTitle(category) {
+  const value = String(category?.title || category?.name || '').trim().toLowerCase();
+  if (value === 'men') return 'Menswear';
+  if (value === 'women') return 'Womenswear';
+  if (value === 'kids') return 'Kids Collection';
+  if (value === 'accessories') return 'Accessories';
+  return category?.title || category?.name || 'Collection';
+}
+
+function categoryHref(category) {
+  return `/c/${category.slug || category.name}`;
+}
+
+function subcategoryHref(category, subcategory) {
+  return `${categoryHref(category)}?subcategory=${encodeURIComponent(subcategory.name)}`;
+}
+
 export default function Home() {
   const { slides, promo2, promo3, promo4 } = usePromos();
   const { articles } = useBlogs();
   const [activeSlide, setActiveSlide] = useState(0);
   const [latestProducts, setLatestProducts] = useState([]);
-  const [menswearProducts, setMenswearProducts] = useState([]);
+  const [catalogSections, setCatalogSections] = useState([]);
+  const [isCatalogLoading, setIsCatalogLoading] = useState(true);
 
   const reviews = [
     { name: "Liam Smith", rating: 5, loc: "London, UK", text: "The fabric feels premium, and the fit was exactly as described.", date: "Recent order", purchasedItem: "Premium Thobe" },
@@ -48,26 +68,47 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    async function loadMenswearProducts() {
+    async function loadCatalogSections() {
+      setIsCatalogLoading(true);
       try {
-        const response = await fetch('/api/products?category=men&limit=12');
-        const data = await response.json();
-        if (response.ok && data.success) {
-          setMenswearProducts(data.products || []);
-        }
+        const categoryResponse = await fetch('/api/categories');
+        const categoryData = await categoryResponse.json();
+        const activeCategories = categoryResponse.ok && categoryData.success
+          ? (categoryData.categories || []).filter((category) => category.isActive)
+          : [];
+
+        const sections = await Promise.all(activeCategories.map(async (category) => {
+          const activeSubcategories = (category.children || []).filter((subcategory) => subcategory.isActive);
+          const subcategories = await Promise.all(activeSubcategories.map(async (subcategory) => {
+            const productResponse = await fetch(
+              `/api/products?category=${encodeURIComponent(category.slug || category.name)}&subcategory=${encodeURIComponent(subcategory.name)}&limit=48`
+            );
+            const productData = await productResponse.json();
+            const products = productResponse.ok && productData.success ? productData.products || [] : [];
+
+            return {
+              ...subcategory,
+              products,
+            };
+          }));
+
+          return {
+            ...category,
+            title: formatCategoryTitle(category),
+            subcategories: subcategories.filter((subcategory) => subcategory.products.length > 0),
+          };
+        }));
+
+        setCatalogSections(sections.filter((section) => section.subcategories.length > 0));
       } catch {
-        setMenswearProducts([]);
+        setCatalogSections([]);
+      } finally {
+        setIsCatalogLoading(false);
       }
     }
 
-    loadMenswearProducts();
+    loadCatalogSections();
   }, []);
-
-  const menswearCollections = menswearProducts.map((product) => ({
-    name: product.name,
-    image: product.image || product.images?.[0],
-    href: `/product/${product.id}`,
-  }));
 
   return (
     <main className={styles.main}>
@@ -147,46 +188,23 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. Category: Menswear */}
-      <CategorySection title="Menswear" index="01" href="/c/men" collections={menswearCollections} />
-
-      {/* 3. Category: Womenswear */}
-      <CategorySection title="Womenswear" index="02" collections={[
-        { name: "Abaya", image: "https://images.unsplash.com/photo-1589156229687-496a31ad1d1f?q=80&w=1886" },
-        { name: "Tops And Shirts", image: "https://images.unsplash.com/photo-1434389678369-183314aa6e1c?q=80&w=1948" },
-        { name: "Dress And Dress Set", image: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?q=80&w=1946" },
-        { name: "Scarf", image: "https://images.unsplash.com/photo-1584916201218-f4242ceb4809?q=80&w=1915" }
-      ]} />
-
-      {/* 4. Category: Kidswear */}
-      <CategorySection title="Kidswear" index="03" collections={[
-        { name: "Girls", image: "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?q=80&w=2015" },
-        { name: "Boys", image: "https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?q=80&w=1972" },
-        { name: "Mother And Daughter Collection", image: "https://images.unsplash.com/photo-1478146896981-b80fe463b330?q=80&w=2070" },
-        { name: "Father and Son Collection", image: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=2070" }
-      ]} />
-
-      {/* 5. Category: Fragrance */}
-      <CategorySection title="Fragrance" index="04" collections={[
-        { name: "Premium", image: "https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=1904" },
-        { name: "Luxury", image: "https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=1887" },
-        { name: "Al Haramain", image: "https://images.unsplash.com/photo-1595425970377-c9703bc48b2d?q=80&w=1935" },
-        { name: "Best Selling", image: "https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=1887" }
-      ]} />
-
-      {/* 6. Category: Accessories */}
-      <CategorySection title="Accessories" index="05" collections={[
-        { name: "Bags", image: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?q=80&w=1938" },
-        { name: "Home Decor", image: "https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=2069" },
-        { name: "Watches", image: "https://images.unsplash.com/photo-1523170335258-f5ed11844a49?q=80&w=2080" },
-        { name: "Wallets", image: "https://images.unsplash.com/photo-1627123424574-724758594e93?q=80&w=1888" }
-      ]} />
+      {isCatalogLoading ? (
+        <CatalogSkeleton />
+      ) : (
+        catalogSections.map((section, index) => (
+          <CategorySection
+            key={section.id}
+            category={section}
+            index={String(index + 1).padStart(2, '0')}
+          />
+        ))
+      )}
 
       {latestProducts.length > 0 && (
         <section className={styles.latestProductsSection}>
           <div className={styles.sectionHeader}>
             <div className={styles.titleWithIndex}>
-              <span className={styles.sectionIndex}>06</span>
+              <span className={styles.sectionIndex}>{String(catalogSections.length + 1).padStart(2, '0')}</span>
               <h2>Latest Arrivals</h2>
             </div>
             <Link href="/c/all" className={styles.exploreLink}>
@@ -428,29 +446,63 @@ export default function Home() {
   );
 }
 
-function CategorySection({ title, collections, index, href }) {
-  if (!collections || collections.length === 0) return null;
+function CatalogSkeleton() {
+  return (
+    <section className={styles.categorySection} aria-label="Loading collections">
+      <div className={styles.sectionHeader}>
+        <div className={styles.titleWithIndex}>
+          <span className={styles.sectionIndex}>01</span>
+          <div className={styles.skeletonTitle} />
+        </div>
+      </div>
+      <div className={styles.collectionGrid}>
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className={`${styles.collectionCard} ${styles.skeletonCard}`} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CategorySection({ category, index }) {
+  if (!category?.subcategories || category.subcategories.length === 0) return null;
 
   return (
     <section className={styles.categorySection}>
       <div className={styles.sectionHeader}>
         <div className={styles.titleWithIndex}>
           <span className={styles.sectionIndex}>{index}</span>
-          <h2>{title}</h2>
+          <h2>{category.title}</h2>
         </div>
-        <Link href={href || `/c/${title.toLowerCase()}`} className={styles.exploreLink}>
+        <Link href={categoryHref(category)} className={styles.exploreLink}>
           Explore All
         </Link>
       </div>
       <CarouselWrapper className={styles.collectionGrid}>
-        {collections.map((col, i) => (
-          <Link href={col.href || href || `/c/${title.toLowerCase()}`} key={`${col.name}-${i}`} className={styles.collectionCard}>
-            <img src={col.image} alt={col.name} />
+        {category.subcategories.map((subcategory) => {
+          const representativeProduct = subcategory.products[0];
+          const image = representativeProduct?.image || representativeProduct?.images?.[0] || FALLBACK_PRODUCT_IMAGE;
+
+          return (
+          <Link
+            href={subcategoryHref(category, subcategory)}
+            key={subcategory.id}
+            className={styles.collectionCard}
+          >
+            <img
+              src={image}
+              alt={subcategory.name}
+              loading="lazy"
+              onError={(event) => {
+                event.currentTarget.src = FALLBACK_PRODUCT_IMAGE;
+              }}
+            />
             <div className={styles.collectionOverlay}>
-              <h3>{col.name}</h3>
+              <h3>{subcategory.name}</h3>
             </div>
           </Link>
-        ))}
+          );
+        })}
       </CarouselWrapper>
     </section>
   );

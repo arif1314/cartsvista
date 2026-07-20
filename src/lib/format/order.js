@@ -49,6 +49,7 @@ export function orderToClient(order) {
     })),
     items: items.map((item) => ({
       id: item.id,
+      productId: item.product_id || '',
       name: item.product_name || 'Product',
       size: item.size || '',
       color: item.color || '',

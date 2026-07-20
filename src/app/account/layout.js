@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { User, Package, Settings, LogOut, MapPin, MessageSquare } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import styles from './layout.module.css';
 
 export default function AccountLayout({ children }) {
@@ -15,20 +14,15 @@ export default function AccountLayout({ children }) {
 
   useEffect(() => {
     async function loadProfile() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        setUserEmail(user.email);
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        
-        if (data) {
-          setProfile(data);
-        }
+      const response = await fetch('/api/auth/me');
+      const data = await response.json().catch(() => ({}));
+
+      if (response.ok && data.success) {
+        setUserEmail(data.user?.email || '');
+        setProfile({
+          full_name: data.profile?.fullName || data.user?.email?.split('@')[0] || 'User',
+          role: data.profile?.role || 'customer',
+        });
       }
       setIsLoading(false);
     }
@@ -36,8 +30,7 @@ export default function AccountLayout({ children }) {
   }, []);
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await fetch('/api/auth/logout', { method: 'POST' }).catch(() => null);
     router.push('/login');
     router.refresh();
   };

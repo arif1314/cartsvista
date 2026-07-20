@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Package, CreditCard, MapPin } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import { formatCurrency } from '@/lib/format/currency';
 import styles from './page.module.css';
 
@@ -17,48 +16,27 @@ export default function AccountOverview() {
 
   useEffect(() => {
     async function fetchData() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const [profileResponse, ordersResponse, addressesResponse] = await Promise.all([
+        fetch('/api/auth/me'),
+        fetch('/api/account/orders'),
+        fetch('/api/account/addresses'),
+      ]);
 
-      if (user) {
-        // Fetch Profile
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
+      const [profileData, ordersData, addressesData] = await Promise.all([
+        profileResponse.json().catch(() => ({})),
+        ordersResponse.json().catch(() => ({})),
+        addressesResponse.json().catch(() => ({})),
+      ]);
 
-        // Fetch Orders and calculate stats
-        const { data: orders } = await supabase
-          .from('orders')
-          .select(`
-            *,
-            order_items (
-              *,
-              products (
-                name,
-                images
-              )
-            )
-          `)
-          .order('created_at', { ascending: false });
+      const userOrders = ordersResponse.ok && ordersData.success ? ordersData.orders || [] : [];
+      const totalSpent = ordersData.summary?.totalSpent || userOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
 
-        const userOrders = orders?.filter(o => o.shipping_address?.email === user.email) || [];
-        const totalSpent = userOrders.reduce((sum, order) => sum + Number(order.total_amount), 0);
-
-        // Fetch Addresses
-        const { count } = await supabase
-          .from('user_addresses')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id);
-
-        setData({
-          profile,
-          orders: userOrders,
-          addressCount: count || 0,
-          totalSpent
-        });
-      }
+      setData({
+        profile: profileResponse.ok && profileData.success ? profileData.profile : null,
+        orders: userOrders,
+        addressCount: addressesData.summary?.totalAddresses || 0,
+        totalSpent
+      });
       setIsLoading(false);
     }
     fetchData();
@@ -79,7 +57,7 @@ export default function AccountOverview() {
   return (
     <div className={styles.overview}>
       <div className={styles.welcomeBox}>
-        <h2>Welcome back, {data.profile?.full_name?.split(' ')[0] || 'User'}!</h2>
+        <h2>Welcome back, {data.profile?.fullName?.split(' ')[0] || 'User'}!</h2>
         <p>From your account dashboard, you can view your recent orders, manage your shipping and billing addresses, and edit your password and account details.</p>
       </div>
 
@@ -122,11 +100,11 @@ export default function AccountOverview() {
               </div>
               <div>
                 <p className={styles.label}>Date</p>
-                <p className={styles.value}>{formatDate(latestOrder.created_at)}</p>
+                <p className={styles.value}>{formatDate(latestOrder.date)}</p>
               </div>
               <div>
                 <p className={styles.label}>Total Amount</p>
-                <p className={styles.value}>{formatCurrency(latestOrder.total_amount)}</p>
+                <p className={styles.value}>{formatCurrency(latestOrder.total)}</p>
               </div>
               <div>
                 <span className={`${styles.statusBadge} ${latestOrder.status === 'delivered' ? styles.statusDelivered : styles.statusProcessing}`}>
@@ -136,15 +114,15 @@ export default function AccountOverview() {
             </div>
             
             <div className={styles.orderItems}>
-              {latestOrder.order_items?.map((item, idx) => (
+              {latestOrder.items?.map((item, idx) => (
                 <div key={idx} className={styles.item}>
                   <img 
-                    src={item.products?.images?.[0] || 'https://placehold.co/100x120?text=No+Image'} 
-                    alt={item.products?.name || 'Product'} 
+                    src={item.image || 'https://placehold.co/100x120?text=No+Image'} 
+                    alt={item.name || 'Product'} 
                   />
                   <div className={styles.itemDetails}>
-                    <h4>{item.products?.name || 'Unknown Product'}</h4>
-                    <p>Size: {item.size} | Qty: {item.quantity}</p>
+                    <h4>{item.name || 'Unknown Product'}</h4>
+                    <p>Size: {item.size} | Qty: {item.qty}</p>
                   </div>
                 </div>
               ))}

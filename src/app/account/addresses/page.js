@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { Plus, Edit2, Trash2, MapPin } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import styles from './page.module.css';
 
 export default function AddressesPage() {
@@ -9,7 +8,7 @@ export default function AddressesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [currentAddress, setCurrentAddress] = useState(null);
-  const [user, setUser] = useState(null);
+  const [message, setMessage] = useState('');
 
   const initialFormState = {
     label: 'Home',
@@ -30,20 +29,13 @@ export default function AddressesPage() {
 
   async function fetchAddresses() {
     setIsLoading(true);
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const response = await fetch('/api/account/addresses');
+    const data = await response.json().catch(() => ({}));
 
-    if (user) {
-      setUser(user);
-      const { data } = await supabase
-        .from('user_addresses')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('is_default', { ascending: false });
-
-      if (data) {
-        setAddresses(data);
-      }
+    if (response.ok && data.success) {
+      setAddresses(data.addresses || []);
+    } else {
+      setMessage(data.error || 'Unable to load addresses.');
     }
     setIsLoading(false);
   }
@@ -56,61 +48,41 @@ export default function AddressesPage() {
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this address?')) {
-      const supabase = createClient();
-      await supabase.from('user_addresses').delete().eq('id', id);
-      setAddresses(addresses.filter(a => a.id !== id));
+      const response = await fetch(`/api/account/addresses/${id}`, { method: 'DELETE' });
+      const data = await response.json().catch(() => ({}));
+
+      if (response.ok && data.success) {
+        await fetchAddresses();
+        return;
+      }
+
+      window.alert(data.error || 'Unable to delete this address.');
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const supabase = createClient();
+    setMessage('');
 
-    // If setting as default, first unset others
-    if (formData.is_default) {
-      await supabase
-        .from('user_addresses')
-        .update({ is_default: false })
-        .eq('user_id', user.id);
-    }
+    const response = await fetch(
+      currentAddress ? `/api/account/addresses/${currentAddress.id}` : '/api/account/addresses',
+      {
+        method: currentAddress ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      }
+    );
+    const data = await response.json().catch(() => ({}));
 
-    if (currentAddress) {
-      // Update
-      const { data } = await supabase
-        .from('user_addresses')
-        .update({
-          ...formData,
-          user_id: user.id
-        })
-        .eq('id', currentAddress.id)
-        .select()
-        .single();
-      
-      if (data) {
-        setAddresses(addresses.map(a => a.id === data.id ? data : a));
-      }
-    } else {
-      // Insert
-      const { data } = await supabase
-        .from('user_addresses')
-        .insert({
-          ...formData,
-          user_id: user.id,
-          // First address becomes default automatically
-          is_default: addresses.length === 0 ? true : formData.is_default
-        })
-        .select()
-        .single();
-        
-      if (data) {
-        setAddresses([...addresses, data]);
-      }
+    if (!response.ok || !data.success) {
+      setMessage(data.error || 'Unable to save this address.');
+      return;
     }
 
     setIsEditing(false);
     setCurrentAddress(null);
     setFormData(initialFormState);
-    fetchAddresses(); // Refresh to ensure correct default ordering
+    fetchAddresses();
   };
 
   return (
@@ -130,6 +102,8 @@ export default function AddressesPage() {
           </button>
         )}
       </div>
+
+      {message && <div className={styles.notice}>{message}</div>}
 
       {isLoading ? (
         <p>Loading addresses...</p>

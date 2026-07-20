@@ -1,5 +1,6 @@
 import { ok, fail } from '@/lib/api/response';
 import { PRODUCT_MANAGER_ROLES, requireRole } from '@/lib/auth/session';
+import { optimizeImageBuffer } from '@/lib/images/optimizer';
 import { createSupabaseAdminClient, createSupabaseServerClient, hasServiceRoleKey } from '@/lib/supabase/server';
 import { slugifyProductName } from '@/lib/validation/product';
 
@@ -106,11 +107,15 @@ export async function POST(request) {
       return fail('Each image must be 5MB or smaller.', 422);
     }
 
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    const path = `${folder}/${Date.now()}-${crypto.randomUUID()}.${extensionFor(file)}`;
-    const { error } = await storageClient.storage.from(BUCKET).upload(path, bytes, {
-      cacheControl: '31536000',
+    const bytes = Buffer.from(await file.arrayBuffer());
+    const optimized = await optimizeImageBuffer(bytes, {
       contentType: file.type,
+      targetBytes: 260 * 1024,
+    });
+    const path = `${folder}/${Date.now()}-${crypto.randomUUID()}.${optimized.extension || extensionFor(file)}`;
+    const { error } = await storageClient.storage.from(BUCKET).upload(path, optimized.buffer, {
+      cacheControl: '31536000',
+      contentType: optimized.contentType || file.type,
       upsert: false,
     });
 
@@ -121,8 +126,10 @@ export async function POST(request) {
       path,
       url: data.publicUrl,
       name: file.name,
-      size: file.size,
-      type: file.type,
+      size: optimized.outputBytes,
+      originalSize: file.size,
+      type: optimized.contentType || file.type,
+      optimized: optimized.optimized,
       createdAt: new Date().toISOString(),
     });
   }

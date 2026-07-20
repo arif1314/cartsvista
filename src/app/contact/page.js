@@ -10,10 +10,11 @@ export default function ContactPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const form = e.currentTarget;
     setIsSubmitting(true);
     setNotice('');
 
-    const formData = new FormData(e.currentTarget);
+    const formData = new FormData(form);
     try {
       const response = await fetch('/api/contact', {
         method: 'POST',
@@ -29,7 +30,7 @@ export default function ContactPage() {
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Unable to submit your message.');
       }
-      e.currentTarget.reset();
+      form.reset();
       setNotice('Thank you for reaching out. Your message has been received and our support team will respond within 24 hours.');
     } catch (error) {
       setNotice(error.message);

@@ -1,0 +1,71 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(12, 12, 12, 0.48);
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+}
+
+.dialog {
+  width: min(460px, 100%);
+  background: #ffffff;
+  border: 1px solid rgba(197, 168, 128, 0.28);
+  border-radius: 14px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
+  padding: 1.35rem;
+}
+
+.header {
+  border-bottom: 1px solid #eeeeee;
+  margin-bottom: 1rem;
+  padding-bottom: 0.85rem;
+}
+
+.kicker {
+  display: block;
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  margin-bottom: 0.35rem;
+  text-transform: uppercase;
+}
+
+.dialog h2 {
+  color: #111111;
+  font-family: var(--font-sans);
+  font-size: 1.15rem;
+  font-weight: 750;
+  margin: 0;
+}
+
+.dialog p {
+  color: #4b4b4b;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin: 0 0 1.25rem;
+}
+
+.dialog button {
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  background: #111111;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 0.9rem 1rem;
+  text-transform: uppercase;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.dialog button:hover {
+  background: #000000;
+  transform: translateY(-1px);
+}

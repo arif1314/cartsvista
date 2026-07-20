@@ -1,8 +1,24 @@
 "use client";
 import { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Calendar, ChevronRight, Send, Clock, User, AlertCircle, RefreshCw } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import styles from './page.module.css';
+
+function ticketFromApi(ticket) {
+  return {
+    id: ticket.id,
+    subject: ticket.subject,
+    message: ticket.message,
+    status: ticket.status,
+    created_at: ticket.createdAt,
+    updated_at: ticket.updatedAt,
+    ticket_replies: (ticket.replies || []).map((reply) => ({
+      id: reply.id,
+      author: reply.author,
+      message: reply.message,
+      created_at: reply.createdAt,
+    })),
+  };
+}
 
 export default function CustomerSupportPage() {
   const [tickets, setTickets] = useState([]);
@@ -16,33 +32,17 @@ export default function CustomerSupportPage() {
   const fetchTickets = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        setUser(user);
-        const { data } = await supabase
-          .from('support_tickets')
-          .select(`
-            *,
-            ticket_replies (*)
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+      const response = await fetch('/api/tickets');
+      const data = await response.json();
 
-        if (data) {
-          // Sort replies inside each ticket
-          const processedTickets = data.map(ticket => ({
-            ...ticket,
-            ticket_replies: ticket.ticket_replies?.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-          }));
-          
-          setTickets(processedTickets);
-          
-          if (selectedTicket) {
-            const updated = processedTickets.find(t => t.id === selectedTicket.id);
-            if (updated) setSelectedTicket(updated);
-          }
+      if (response.ok && data.success) {
+        setUser({ authenticated: true });
+        const processedTickets = (data.tickets || []).map(ticketFromApi);
+        setTickets(processedTickets);
+
+        if (selectedTicket) {
+          const updated = processedTickets.find(t => t.id === selectedTicket.id);
+          if (updated) setSelectedTicket(updated);
         }
       }
     } catch (e) {
@@ -68,25 +68,19 @@ export default function CustomerSupportPage() {
     
     setIsSending(true);
     try {
-      const supabase = createClient();
-      
-      // 1. Insert reply
-      const { error: replyError } = await supabase
-        .from('ticket_replies')
-        .insert({
-          ticket_id: selectedTicket.id,
-          author: 'Customer',
-          message: replyText
-        });
+      const response = await fetch('/api/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reply',
+          ticketId: selectedTicket.id,
+          replyMessage: replyText,
+        }),
+      });
+      const data = await response.json();
 
-      if (replyError) throw replyError;
-
-      // 2. Update ticket status to Open if it was Replied (by admin)
-      if (selectedTicket.status !== 'Closed') {
-        await supabase
-          .from('support_tickets')
-          .update({ status: 'Open', updated_at: new Date().toISOString() })
-          .eq('id', selectedTicket.id);
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to send reply.');
       }
 
       setReplyText('');

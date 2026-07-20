@@ -20,7 +20,7 @@ export default function CheckoutPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (cartItems.length === 0) {
-      alert("Your cart is empty!");
+      alert("Your cart is empty. Please add a product before placing an order.");
       return;
     }
     
@@ -62,7 +62,11 @@ export default function CheckoutPage() {
 
       router.push(`/checkout/success?order_id=${data.order.id}`);
     } catch (error) {
-      alert('Failed to place order. Details: ' + error.message);
+      const rawMessage = String(error.message || '');
+      const friendlyMessage = rawMessage.toLowerCase().includes('row-level security')
+        ? 'We could not save your order because the database order policy is blocking checkout. Please contact CartsVista support or try again after the store owner updates the order policy.'
+        : rawMessage;
+      alert(`Order could not be placed.\n\n${friendlyMessage}`);
       setIsSubmitting(false);
     }
   };

@@ -25,6 +25,9 @@ export default function CategoryPage({ params }) {
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [sortBy, setSortBy] = useState('Featured');
   const subcategoryParam = searchParams.get('subcategory') || '';
+  const contextSubcategories = categoryContextData?.children?.length
+    ? categoryContextData.children.map((child) => child.name)
+    : categoryContextData?.collections || [];
 
   // Initialize and update products
   useEffect(() => {
@@ -32,13 +35,14 @@ export default function CategoryPage({ params }) {
       setIsLoading(true);
       try {
         const categoryQuery = categoryStr === 'all' ? '' : `&category=${encodeURIComponent(categoryStr)}`;
-        const response = await fetch(`/api/products?limit=48${categoryQuery}`);
+        const subcategoryQuery = subcategoryParam ? `&subcategory=${encodeURIComponent(subcategoryParam)}` : '';
+        const response = await fetch(`/api/products?limit=48${categoryQuery}${subcategoryQuery}`);
         const data = await response.json();
         const nextProducts = response.ok && data.success ? data.products || [] : [];
         setProducts(nextProducts);
         if (subcategoryParam) {
           setSelectedCategories([subcategoryParam]);
-          setFilteredProducts(nextProducts.filter((product) => product.subcategory === subcategoryParam));
+          setFilteredProducts(nextProducts);
         } else {
           setSelectedCategories([]);
           setFilteredProducts(nextProducts);
@@ -53,7 +57,9 @@ export default function CategoryPage({ params }) {
     fetchProducts();
   }, [categoryStr, subcategoryParam]);
 
-  const uniqueSubCategories = Array.from(new Set(products.map(p => p.subcategory).filter(Boolean)));
+  const uniqueSubCategories = contextSubcategories.length > 0
+    ? contextSubcategories
+    : Array.from(new Set(products.map(p => p.subcategory).filter(Boolean)));
 
   const handleApplyFilters = () => {
     let result = [...products];
@@ -285,10 +291,14 @@ export default function CategoryPage({ params }) {
           </div>
 
           <div className={styles.grid}>
-            {isLoading ? (
-              <div className={styles.emptyState}>
-                <p>Loading products...</p>
-              </div>
+            {isLoading && sortedProducts.length === 0 ? (
+              Array.from({ length: 8 }).map((_, index) => (
+                <div key={index} className={styles.productSkeleton}>
+                  <div className={styles.skeletonImage} />
+                  <div className={styles.skeletonText} />
+                  <div className={styles.skeletonPrice} />
+                </div>
+              ))
             ) : sortedProducts.length > 0 ? (
               sortedProducts.map(product => (
                 <div key={product.id} className={styles.gridItem}>

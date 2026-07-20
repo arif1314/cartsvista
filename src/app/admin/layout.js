@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, Package, ShoppingCart, Users, Settings, LogOut, Bell, Tag, FileText, MessageSquare, Percent, Truck, Images } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import styles from './layout.module.css';
 
 export default function AdminLayout({ children }) {
@@ -14,19 +13,14 @@ export default function AdminLayout({ children }) {
 
   useEffect(() => {
     async function loadProfile() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        
-        if (data) {
-          setProfile(data);
-        }
+      const response = await fetch('/api/auth/me');
+      const data = await response.json().catch(() => ({}));
+
+      if (response.ok && data.success) {
+        setProfile({
+          full_name: data.profile?.fullName || data.user?.email?.split('@')[0] || 'Admin',
+          role: data.profile?.role || 'admin',
+        });
       }
       setIsLoading(false);
     }
@@ -34,8 +28,7 @@ export default function AdminLayout({ children }) {
   }, []);
 
   const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await fetch('/api/auth/logout', { method: 'POST' }).catch(() => null);
     router.push('/login');
     router.refresh();
   };

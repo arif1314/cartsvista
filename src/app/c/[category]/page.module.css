@@ -157,6 +157,45 @@
   border-radius: 8px;
 }
 
+.productSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.skeletonImage,
+.skeletonText,
+.skeletonPrice {
+  overflow: hidden;
+  background: linear-gradient(90deg, #eeeeee 0%, #f8f8f8 45%, #eeeeee 100%);
+  background-size: 220% 100%;
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+
+.skeletonImage {
+  aspect-ratio: 4/5;
+  border-radius: 8px;
+}
+
+.skeletonText {
+  width: 82%;
+  height: 16px;
+  margin: 0.25rem auto 0;
+  border-radius: 999px;
+}
+
+.skeletonPrice {
+  width: 38%;
+  height: 14px;
+  margin: 0 auto;
+  border-radius: 999px;
+}
+
+@keyframes skeletonPulse {
+  0% { background-position: 120% 0; }
+  100% { background-position: -120% 0; }
+}
+
 @media (max-width: 1024px) {
   .layout {
     flex-direction: column;
@@ -221,4 +260,3 @@
   color: var(--primary);
   border-color: var(--primary);
 }
-

@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import styles from './page.module.css';
 
 function SettingsContent() {
@@ -23,23 +22,15 @@ function SettingsContent() {
 
   useEffect(() => {
     async function loadData() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        setUser(user);
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-          
-        if (data) {
-          setFormData({
-            fullName: data.full_name || '',
-            phone: data.phone || '',
-          });
-        }
+      const response = await fetch('/api/auth/me');
+      const data = await response.json().catch(() => ({}));
+
+      if (response.ok && data.success) {
+        setUser(data.user);
+        setFormData({
+          fullName: data.profile?.fullName || '',
+          phone: data.profile?.phone || '',
+        });
       }
       setIsLoading(false);
     }
@@ -53,17 +44,15 @@ function SettingsContent() {
     setIsSaving(true);
     setMessage('');
 
-    const supabase = createClient();
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        full_name: formData.fullName,
-        phone: formData.phone,
-      })
-      .eq('id', user.id);
+    const response = await fetch('/api/account/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(formData),
+    });
+    const data = await response.json().catch(() => ({}));
 
-    if (error) {
-      setMessage(`Error: ${error.message}`);
+    if (!response.ok || !data.success) {
+      setMessage(`Error: ${data.error || 'Unable to update profile.'}`);
     } else {
       setMessage('Profile updated successfully.');
     }
@@ -81,19 +70,21 @@ function SettingsContent() {
       return;
     }
 
-    if (passwordData.newPassword.length < 6) {
-      setMessage('Error: Password must be at least 6 characters.');
+    if (passwordData.newPassword.length < 8) {
+      setMessage('Error: Password must be at least 8 characters.');
       setIsSaving(false);
       return;
     }
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({
-      password: passwordData.newPassword
+    const response = await fetch('/api/account/password', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(passwordData),
     });
+    const data = await response.json().catch(() => ({}));
 
-    if (error) {
-      setMessage(`Error: ${error.message}`);
+    if (!response.ok || !data.success) {
+      setMessage(`Error: ${data.error || 'Unable to update password.'}`);
     } else {
       setMessage('Password updated successfully.');
       setPasswordData({ newPassword: '', confirmPassword: '' });
@@ -184,7 +175,7 @@ function SettingsContent() {
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
                   required 
-                  minLength={6}
+                  minLength={8}
                 />
               </div>
               <div className={styles.inputGroup}>
@@ -195,7 +186,7 @@ function SettingsContent() {
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
                   required 
-                  minLength={6}
+                  minLength={8}
                 />
               </div>
             </div>

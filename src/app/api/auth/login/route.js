@@ -38,6 +38,13 @@ export async function POST(request) {
       return fail(error.message || 'Authentication failed.', 401);
     }
 
+    if (mode === 'signup' && data.user && !data.session) {
+      return ok({
+        verificationRequired: true,
+        message: 'Account created successfully. Please check your email and verify your account.',
+      });
+    }
+
     if (!data.session || !data.user) {
       return fail('Please verify your email before signing in.', 403);
     }

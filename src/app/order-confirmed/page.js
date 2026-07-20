@@ -43,7 +43,7 @@ function OrderConfirmedContent() {
         <Link href="/" className={styles.primaryBtn}>
           Continue Shopping
         </Link>
-        <Link href="/customer/orders" className={styles.secondaryBtn}>
+        <Link href="/account/orders" className={styles.secondaryBtn}>
           View My Orders
         </Link>
       </div>

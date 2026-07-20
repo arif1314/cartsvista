@@ -36,29 +36,26 @@ function LoginForm() {
     setIsLoading(true);
     setError('');
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: formData.email,
-      password: formData.password,
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: 'login',
+        email: formData.email,
+        password: formData.password,
+      }),
     });
+    const data = await response.json().catch(() => ({}));
 
-    if (error) {
-      setError(error.message === 'Invalid login credentials'
+    if (!response.ok || !data.success) {
+      setError(data.error === 'Invalid login credentials'
         ? 'The email or password is incorrect. Please try again.'
-        : error.message);
+        : data.error || 'Unable to sign in. Please try again.');
       setIsLoading(false);
       return;
     }
 
-    // Redirect to admin or account based on role
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    const isAdmin = profile?.role === 'admin' || profile?.role === 'super_admin';
+    const isAdmin = ['admin', 'super_admin', 'manager', 'support'].includes(data.role);
     const redirect = searchParams.get('redirect');
 
     if (redirect) {
@@ -76,32 +73,39 @@ function LoginForm() {
     setIsLoading(true);
     setError('');
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long.');
       setIsLoading(false);
       return;
     }
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-      options: {
-        data: {
-          full_name: formData.fullName,
-        },
-      },
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mode: 'signup',
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+      }),
     });
+    const data = await response.json().catch(() => ({}));
 
-    if (error) {
-      setError(error.message === 'User already registered'
+    if (!response.ok || !data.success) {
+      setError(data.error === 'User already registered'
         ? 'This email is already registered. Please sign in.'
-        : error.message);
+        : data.error || 'Unable to create this account. Please try again.');
       setIsLoading(false);
       return;
     }
 
-    setSuccess('Account created successfully. Please check your email and verify your account.');
+    if (data.verificationRequired) {
+      setSuccess(data.message || 'Account created successfully. Please check your email and verify your account.');
+    } else {
+      setSuccess('Account created successfully. You can now use your account.');
+      router.push('/account');
+      router.refresh();
+    }
     setIsLoading(false);
     setFormData({ fullName: '', email: '', password: '' });
   };
@@ -245,7 +249,7 @@ function LoginForm() {
                     value={formData.password}
                     onChange={handleChange}
                     required
-                    minLength={6}
+                    minLength={8}
                   />
                   <button
                     type="button"

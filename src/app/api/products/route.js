@@ -4,9 +4,20 @@ import { createSupabaseAdminClient } from '@/lib/supabase/server';
 
 function normalizeCategory(value) {
   const text = String(value || '').trim().toLowerCase();
+  if (!text || text === 'all') return '';
   if (text.includes('women')) return 'women';
   if (text.includes('men')) return 'men';
+  if (text.includes('kid')) return 'kids';
+  if (text.includes('accessor')) return 'accessories';
   return text;
+}
+
+function categoryAliases(category) {
+  if (category === 'men') return ['men', 'Menswear'];
+  if (category === 'women') return ['women', 'Womenswear'];
+  if (category === 'kids') return ['kids', 'Kidswear', 'Kids Collection'];
+  if (category === 'accessories') return ['accessories', 'Accessories'];
+  return [category];
 }
 
 export async function GET(request) {
@@ -25,8 +36,13 @@ export async function GET(request) {
     .limit(limit);
 
   if (category) {
-    const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
-    query = query.or(`category.ilike.%${categoryName}%,subcategory.ilike.%${categoryName}%`);
+    const filters = categoryAliases(category)
+      .map((alias) => alias.replaceAll('%', '').replaceAll(',', ' ').trim())
+      .filter(Boolean)
+      .map((alias) => `category.ilike.${alias}`);
+    if (filters.length > 0) {
+      query = query.or(filters.join(','));
+    }
   }
 
   if (subcategory) {

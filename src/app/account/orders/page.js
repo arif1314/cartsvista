@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
 import { formatCurrency } from '@/lib/format/currency';
 import styles from './page.module.css';
 
@@ -11,35 +10,15 @@ export default function OrdersPage() {
 
   useEffect(() => {
     async function fetchOrders() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (user) {
-        // Fetch orders and their items
-        const { data, error } = await supabase
-          .from('orders')
-          .select(`
-            *,
-            order_items (
-              *,
-              products (
-                name,
-                images
-              )
-            )
-          `)
-          // Assuming user_id is in orders table (Note: Migration v2 didn't add user_id to orders! We need to fix this or fetch by email)
-          // Wait, orders table in the current schema doesn't have a user_id? Let's check the schema.
-          // Fallback: fetch by shipping_address email
-          .order('created_at', { ascending: false });
-
-        if (data) {
-          // Filter by user's email if user_id doesn't exist
-          const userOrders = data.filter(order => order.shipping_address?.email === user.email);
-          setOrders(userOrders);
+      try {
+        const response = await fetch('/api/account/orders');
+        const data = await response.json();
+        if (response.ok && data.success) {
+          setOrders(data.orders || []);
         }
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }
     fetchOrders();
   }, []);
@@ -79,12 +58,12 @@ export default function OrdersPage() {
                   <div className={styles.divider}></div>
                   <div>
                     <p className={styles.label}>Date Placed</p>
-                    <p className={styles.value}>{formatDate(order.created_at)}</p>
+                    <p className={styles.value}>{formatDate(order.date)}</p>
                   </div>
                   <div className={styles.divider}></div>
                   <div>
                     <p className={styles.label}>Total Amount</p>
-                    <p className={styles.value}>{formatCurrency(order.total_amount)}</p>
+                    <p className={styles.value}>{formatCurrency(order.total)}</p>
                   </div>
                 </div>
                 <div className={styles.headerActions}>
@@ -105,19 +84,19 @@ export default function OrdersPage() {
                 </div>
 
                 <div className={styles.itemsList}>
-                  {order.order_items && order.order_items.map((item, idx) => (
+                  {order.items && order.items.map((item, idx) => (
                     <div key={idx} className={styles.item}>
                       <img 
-                        src={item.products?.images?.[0] || 'https://placehold.co/100x120?text=No+Image'} 
-                        alt={item.products?.name || 'Product'} 
+                        src={item.image || 'https://placehold.co/100x120?text=No+Image'} 
+                        alt={item.name || 'Product'} 
                       />
                       <div className={styles.itemInfo}>
-                        <h4>{item.products?.name || 'Unknown Product'}</h4>
+                        <h4>{item.name || 'Unknown Product'}</h4>
                         <p>Size: {item.size}</p>
-                        <p>Qty: {item.quantity}</p>
+                        <p>Qty: {item.qty}</p>
                       </div>
                       <div className={styles.itemActions}>
-                        <Link href={`/product/${item.product_id}`} className={styles.actionBtn}>
+                        <Link href={item.productId ? `/product/${item.productId}` : '/'} className={styles.actionBtn}>
                           Buy Again
                         </Link>
                       </div>

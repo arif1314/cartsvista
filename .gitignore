@@ -45,3 +45,15 @@ next-env.d.ts
 .next-admin/
 .next-account/
 
+# Local product source/import folders. Final product images live in Supabase Storage.
+/Casualwear & Sets/
+/Chinos/
+/Dresses & Occasionwear/
+/Kurtis & Tunics/
+/Sleepwear & Loungewear/
+/Tops/
+/blazer/
+/dresses/
+/generated-products/
+/shirt/
+/t-shirt/

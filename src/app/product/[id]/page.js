@@ -103,7 +103,34 @@ export default function ProductPage({ params }) {
   };
 
   if (isLoading) {
-    return <div className={styles.pageWrapper} style={{ padding: '4rem', textAlign: 'center' }}>Loading product details...</div>;
+    return (
+      <div className={styles.pageWrapper}>
+        <div className={styles.productContainer}>
+          <div className={styles.imageGallery}>
+            <div className={`${styles.mainImageWrapper} ${styles.skeletonBlock}`} />
+            <div className={styles.thumbnailGrid}>
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className={`${styles.thumbnailBtn} ${styles.skeletonBlock}`} />
+              ))}
+            </div>
+          </div>
+          <div className={styles.productInfoWrapper}>
+            <div className={styles.productInfo}>
+              <div className={`${styles.skeletonLine} ${styles.skeletonTitle}`} />
+              <div className={styles.skeletonLine} />
+              <div className={`${styles.skeletonLine} ${styles.skeletonPrice}`} />
+              <div className={styles.skeletonButtonRow}>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div key={index} className={`${styles.sizeBtn} ${styles.skeletonBlock}`} />
+                ))}
+              </div>
+              <div className={`${styles.addToCartBtn} ${styles.skeletonBlock}`} />
+              <div className={`${styles.findInStoreBtn} ${styles.skeletonBlock}`} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!product) {
@@ -235,11 +262,6 @@ export default function ProductPage({ params }) {
               >
                 <Mail size={20} strokeWidth={1.5} />
               </a>
-            </div>
-            
-            <div className={styles.shortDescription}>
-              <p>{product.description || 'Captivating in dark mauve with a majestic essence, this style features a collared neckline, metal zipper placket, gathered sleeves, and wrinkle-resistant premium crepe for effortless elegance.'}</p>
-              <button className={styles.readMoreBtn}>Read more</button>
             </div>
             
             <div className={styles.accordions}>

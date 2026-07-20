@@ -404,6 +404,47 @@
   color: var(--secondary);
 }
 
+.skeletonBlock,
+.skeletonLine {
+  overflow: hidden;
+  color: transparent;
+  border-color: transparent;
+  background: linear-gradient(90deg, #eeeeee 0%, #f8f8f8 45%, #eeeeee 100%);
+  background-size: 220% 100%;
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+
+.skeletonLine {
+  width: 70%;
+  height: 16px;
+  border-radius: 999px;
+  margin-bottom: 1rem;
+}
+
+.skeletonTitle {
+  width: 92%;
+  height: 32px;
+  margin-bottom: 0.75rem;
+}
+
+.skeletonPrice {
+  width: 28%;
+  height: 24px;
+  margin: 1rem 0 2rem;
+}
+
+.skeletonButtonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+@keyframes skeletonPulse {
+  0% { background-position: 120% 0; }
+  100% { background-position: -120% 0; }
+}
+
 @media (max-width: 1024px) {
   .productContainer {
     flex-direction: column;

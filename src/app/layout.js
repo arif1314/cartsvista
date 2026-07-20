@@ -5,6 +5,7 @@ import { CategoryProvider } from "@/context/CategoryContext";
 import { PromoProvider } from "@/context/PromoContext";
 import { BlogProvider } from "@/context/BlogContext";
 import ConditionalLayout from "@/components/ConditionalLayout";
+import CustomAlert from "@/components/CustomAlert";
 import "./globals.css";
 
 const inter = Inter({
@@ -37,6 +38,7 @@ export default function RootLayout({ children }) {
                   <ConditionalLayout>
                     {children}
                   </ConditionalLayout>
+                  <CustomAlert />
                 </CartProvider>
               </WishlistProvider>
             </BlogProvider>

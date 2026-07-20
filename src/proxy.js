@@ -60,7 +60,7 @@ export async function proxy(request) {
     }
   }
 
-  if (pathname.startsWith('/account') || pathname === '/checkout') {
+  if (pathname.startsWith('/account')) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';

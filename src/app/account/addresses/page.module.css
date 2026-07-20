@@ -40,6 +40,16 @@
   background: #333;
 }
 
+.notice {
+  margin-bottom: 1.5rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid #f1d6a8;
+  border-radius: 4px;
+  background: #fff8ed;
+  color: #7a4d0b;
+  font-size: 0.9rem;
+}
+
 /* Address Grid */
 .addressGrid {
   display: grid;
