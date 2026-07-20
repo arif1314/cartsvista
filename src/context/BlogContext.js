@@ -43,7 +43,7 @@ const DEFAULT_ARTICLES = [
 
 export function BlogProvider({ children }) {
   const [articles, setArticles] = useState(DEFAULT_ARTICLES);
-  const [isLoaded, setIsLoaded] = useState(true);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     async function fetchBlogs() {
