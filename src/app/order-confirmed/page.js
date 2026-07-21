@@ -9,6 +9,7 @@ import styles from './page.module.css';
 function OrderConfirmedContent() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
+  const accessToken = searchParams.get('access');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -43,8 +44,15 @@ function OrderConfirmedContent() {
         <Link href="/" className={styles.primaryBtn}>
           Continue Shopping
         </Link>
-        <Link href="/account/orders" className={styles.secondaryBtn}>
-          View My Orders
+        <Link
+          href={orderId && accessToken
+            ? `/orders/${orderId}?access=${encodeURIComponent(accessToken)}`
+            : orderId
+              ? `/orders/track?orderId=${encodeURIComponent(orderId)}`
+              : '/orders/track'}
+          className={styles.secondaryBtn}
+        >
+          View Order
         </Link>
       </div>
     </>

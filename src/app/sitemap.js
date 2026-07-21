@@ -1,21 +1,23 @@
 import { absoluteUrl } from '@/lib/site/url';
 import { createSupabaseAdminClient } from '@/lib/supabase/server';
+import { footerPagesData } from '@/data/footerPagesData';
 
 const staticRoutes = [
   '/',
   '/apps',
   '/contact',
   '/store-locations',
-  '/pages/shipping-policy',
-  '/pages/terms-conditions',
-  '/pages/privacy-policy',
-  '/pages/exchange-refund',
-  '/pages/payment-policy',
+  ...Object.keys(footerPagesData).map((slug) => `/pages/${slug}`),
+  '/campaign/summer-edition-2026',
+  '/campaign/new-beachwear-autumn-2026',
+  '/campaign/flash-sale',
+  '/campaign/artful-living',
+  '/campaign/beat-the-heat',
 ];
 
 export default async function sitemap() {
   const admin = createSupabaseAdminClient();
-  const [productsResult, categoriesResult] = await Promise.all([
+  const [productsResult, categoriesResult, articlesResult] = await Promise.all([
     admin
       .from('products')
       .select('id,updated_at,created_at')
@@ -26,12 +28,16 @@ export default async function sitemap() {
       .select('slug,updated_at,created_at')
       .eq('is_active', true)
       .limit(500),
+    admin
+      .from('articles')
+      .select('slug,created_at')
+      .eq('is_published', true)
+      .limit(1000),
   ]);
 
   const now = new Date();
   const staticEntries = staticRoutes.map((route) => ({
     url: absoluteUrl(route),
-    lastModified: now,
     changeFrequency: route === '/' ? 'daily' : 'monthly',
     priority: route === '/' ? 1 : 0.6,
   }));
@@ -50,5 +56,12 @@ export default async function sitemap() {
     priority: 0.7,
   }));
 
-  return [...staticEntries, ...categoryEntries, ...productEntries];
+  const articleEntries = (articlesResult.data || []).map((article) => ({
+    url: absoluteUrl(`/blog/${article.slug}`),
+    lastModified: new Date(article.created_at || now),
+    changeFrequency: 'monthly',
+    priority: 0.65,
+  }));
+
+  return [...staticEntries, ...categoryEntries, ...productEntries, ...articleEntries];
 }

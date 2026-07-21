@@ -2,6 +2,7 @@ import { ok, fail } from '@/lib/api/response';
 import { getSessionContext } from '@/lib/auth/session';
 import { formatCurrency } from '@/lib/format/currency';
 import { orderConfirmationMessage, queueNotification } from '@/lib/notifications/log';
+import { createGuestOrderAccessToken } from '@/lib/orders/guest-access';
 import { createStripeCheckoutSession } from '@/lib/payments/stripe';
 import { calculateShippingAmount, normalizeShippingSettings } from '@/lib/settings/shipping';
 import {
@@ -195,6 +196,11 @@ export async function POST(request) {
       return fail(itemsError.message, 500);
     }
 
+    const guestAccessToken = createGuestOrderAccessToken(
+      order.id,
+      checkout.shippingAddress.email
+    );
+
     const stockUpdates = checkout.items
       .filter((item) => item.isUuidProduct && productPriceMap.has(item.productId))
       .map((item) => admin.rpc('decrement_product_stock', {
@@ -261,7 +267,7 @@ export async function POST(request) {
         stripeSettings: paymentSettings.stripe,
         order,
         items: orderItems,
-        successUrl: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}`,
+        successUrl: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}&order_id=${order.id}&access=${encodeURIComponent(guestAccessToken)}`,
         cancelUrl: `${origin}/checkout/cancel?order_id=${order.id}`,
         customerEmail: checkout.shippingAddress.email,
       });
@@ -371,6 +377,7 @@ export async function POST(request) {
         paymentStatus: order.payment_status,
         paymentReference: responsePaymentReference,
         paymentRedirectUrl,
+        guestAccessToken,
       },
     }, { status: 201 });
   } catch (error) {

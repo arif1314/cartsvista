@@ -1,0 +1,129 @@
+.page {
+  min-height: 72vh;
+  display: grid;
+  place-items: center;
+  padding: clamp(1.25rem, 5vw, 4rem) 1rem;
+  background: #f6f4f0;
+}
+
+.card {
+  width: min(560px, 100%);
+  padding: clamp(1.5rem, 5vw, 3rem);
+  border: 1px solid rgba(18, 18, 18, 0.08);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(45, 35, 25, 0.08);
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 2rem;
+  color: #666;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 1.25rem;
+  border-radius: 50%;
+  color: #fff;
+  background: #171717;
+}
+
+.eyebrow {
+  color: #9b794d;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.card h1 {
+  margin: 0.45rem 0 0.7rem;
+  font-size: clamp(2rem, 6vw, 3rem);
+}
+
+.card > p {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.form {
+  display: grid;
+  gap: 1.2rem;
+  margin-top: 2rem;
+}
+
+.form label {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.form label span {
+  color: #222;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.form input {
+  width: 100%;
+  padding: 0.95rem 1rem;
+  border: 1px solid #d8d5cf;
+  border-radius: 6px;
+  outline: none;
+  font: inherit;
+}
+
+.form input:focus {
+  border-color: #171717;
+  box-shadow: 0 0 0 3px rgba(18, 18, 18, 0.06);
+}
+
+.form button {
+  min-height: 50px;
+  margin-top: 0.4rem;
+  border-radius: 6px;
+  color: #fff;
+  background: #171717;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.form button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.error {
+  margin-top: 1.25rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #f1a4a4;
+  border-radius: 6px;
+  color: #a91d1d;
+  background: #fff3f3;
+  font-size: 0.84rem;
+}
+
+.card .accountLink {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.82rem;
+}
+
+.accountLink a {
+  color: #171717;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

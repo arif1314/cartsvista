@@ -1,298 +1,120 @@
-"use client";
-import { useState, use, useEffect } from 'react';
+import { cache } from 'react';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Maximize2, Ruler, Lock, Share2, MessageCircle, Phone, Mail, Plus, Minus } from 'lucide-react';
-import { useCart } from '@/context/CartContext';
-import { formatCurrency } from '@/lib/format/currency';
-import styles from './page.module.css';
+import ProductClient from './ProductClient';
+import { productToClient } from '@/lib/validation/product';
+import { createSupabaseAdminClient } from '@/lib/supabase/server';
+import { absoluteUrl } from '@/lib/site/url';
 
-export default function ProductPage({ params }) {
-  const resolvedParams = use(params);
-  const [product, setProduct] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  
-  useEffect(() => {
-    async function fetchProduct() {
-      setIsLoading(true);
-      try {
-        const response = await fetch(`/api/products/${resolvedParams.id}`);
-        const data = await response.json();
-        if (response.ok && data.success) {
-          setProduct(data.product);
-        } else {
-          setProduct(null);
-        }
-      } catch {
-        setProduct(null);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchProduct();
-  }, [resolvedParams.id]);
+const getProduct = cache(async (id) => {
+  const admin = createSupabaseAdminClient();
+  const { data } = await admin
+    .from('products')
+    .select('*, categories(name,slug), brands(name,slug)')
+    .eq('id', id)
+    .eq('status', 'published')
+    .eq('is_active', true)
+    .maybeSingle();
 
-  useEffect(() => {
-    setCurrentImageIndex(0);
-  }, [product?.id]);
+  return data ? productToClient(data) : null;
+});
 
-  const { addToCart } = useCart();
-  const [selectedSize, setSelectedSize] = useState('');
-  
-  // Gallery State
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const images = product?.images?.length > 0 ? product.images : (product?.image ? [product.image] : ['https://placehold.co/600x800']);
+function plainText(value, fallback = '') {
+  return String(value || fallback)
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % images.length);
-  };
+function productDescription(product) {
+  return plainText(
+    product.description,
+    `Shop ${product.name} from CartsVista. Premium craftsmanship, secure checkout, and worldwide delivery options.`
+  ).slice(0, 160);
+}
 
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
-
-  // Accordion State
-  const [openAccordion, setOpenAccordion] = useState(null);
-
-  const toggleAccordion = (index) => {
-    setOpenAccordion(openAccordion === index ? null : index);
-  };
-  
-  // Custom sizes configuration mimicking the provided screenshot structure
-  const sizes = [
-    { label: 'XS/52', available: true },
-    { label: 'S/54', available: true },
-    { label: 'M/56', available: false },
-    { label: 'L/58', available: false },
-    { label: 'XL/60', available: true },
-  ];
-
-  const handleAddToCart = () => {
-    if (!selectedSize) {
-      alert("Please select a size first.");
-      return;
-    }
-    addToCart(product, 1, selectedSize);
-  };
-
-  const productUrl = typeof window !== 'undefined' ? window.location.href : '';
-  const shareText = product ? `Take a look at ${product.name} from CartsVista.` : 'Take a look at this CartsVista product.';
-
-  const handleNativeShare = async () => {
-    if (!productUrl) return;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: product?.name || 'CartsVista product',
-          text: shareText,
-          url: productUrl,
-        });
-        return;
-      } catch (error) {
-        if (error?.name === 'AbortError') return;
-      }
-    }
-
-    try {
-      await navigator.clipboard.writeText(productUrl);
-      alert('Product link copied.');
-    } catch {
-      alert(productUrl);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className={styles.pageWrapper}>
-        <div className={styles.productContainer}>
-          <div className={styles.imageGallery}>
-            <div className={`${styles.mainImageWrapper} ${styles.skeletonBlock}`} />
-            <div className={styles.thumbnailGrid}>
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className={`${styles.thumbnailBtn} ${styles.skeletonBlock}`} />
-              ))}
-            </div>
-          </div>
-          <div className={styles.productInfoWrapper}>
-            <div className={styles.productInfo}>
-              <div className={`${styles.skeletonLine} ${styles.skeletonTitle}`} />
-              <div className={styles.skeletonLine} />
-              <div className={`${styles.skeletonLine} ${styles.skeletonPrice}`} />
-              <div className={styles.skeletonButtonRow}>
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <div key={index} className={`${styles.sizeBtn} ${styles.skeletonBlock}`} />
-                ))}
-              </div>
-              <div className={`${styles.addToCartBtn} ${styles.skeletonBlock}`} />
-              <div className={`${styles.findInStoreBtn} ${styles.skeletonBlock}`} />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+export async function generateMetadata({ params }) {
+  const { id } = await params;
+  const product = await getProduct(id);
 
   if (!product) {
-    return notFound();
+    return {
+      title: 'Product Not Found',
+      robots: { index: false, follow: false },
+    };
   }
 
+  const canonical = `/product/${product.id}`;
+  const description = productDescription(product);
+  const image = product.images?.[0] || product.image;
+
+  return {
+    title: product.name,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      type: 'website',
+      url: canonical,
+      title: product.name,
+      description,
+      images: image ? [{ url: image, alt: product.name }] : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: product.name,
+      description,
+      images: image ? [image] : [],
+    },
+  };
+}
+
+export default async function ProductPage({ params }) {
+  const { id } = await params;
+  const product = await getProduct(id);
+  if (!product) notFound();
+
+  const canonicalUrl = absoluteUrl(`/product/${product.id}`);
+  const price = Number(product.discount_price || product.price || 0);
+  const categoryName = product.categoryName || product.category || 'Products';
+  const categorySlug = product.categorySlug || String(product.category || 'all').toLowerCase();
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    '@id': `${canonicalUrl}#product`,
+    name: product.name,
+    description: productDescription(product),
+    image: product.images || [product.image].filter(Boolean),
+    sku: product.sku || product.id,
+    category: categoryName,
+    ...(product.brandName ? { brand: { '@type': 'Brand', name: product.brandName } } : {}),
+    offers: {
+      '@type': 'Offer',
+      url: canonicalUrl,
+      priceCurrency: 'USD',
+      price,
+      availability: Number(product.stock || 0) > 0
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      itemCondition: 'https://schema.org/NewCondition',
+      seller: { '@type': 'Organization', name: 'CartsVista' },
+    },
+  };
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: absoluteUrl('/') },
+      { '@type': 'ListItem', position: 2, name: categoryName, item: absoluteUrl(`/c/${categorySlug}`) },
+      { '@type': 'ListItem', position: 3, name: product.name, item: canonicalUrl },
+    ],
+  };
+
   return (
-    <div className={styles.pageWrapper}>
-      <div className={styles.breadcrumb}>
-        <Link href="/">Home</Link> <span className={styles.separator}>/</span> {product.name} - {product.id.length > 10 ? product.id.substring(0, 8) : product.id}
-      </div>
-
-      <div className={styles.productContainer}>
-        {/* Left Image Section */}
-        <div className={styles.imageGallery}>
-          <div className={styles.mainImageWrapper}>
-            <button className={styles.iconBtnLeft} onClick={prevImage}><ChevronLeft size={20} /></button>
-            <button className={styles.iconBtnRight} onClick={nextImage}><ChevronRight size={20} /></button>
-            <button className={styles.iconBtnFullscreen}><Maximize2 size={16} /></button>
-            <img src={images[currentImageIndex]} alt={product.name} className={styles.image} />
-          </div>
-          
-          <div className={styles.imageIndicator}>
-            <span className={styles.imageCount}>{currentImageIndex + 1} / {images.length}</span>
-            <div className={styles.progressBar}>
-              <div 
-                className={styles.progressFill} 
-                style={{ width: `${((currentImageIndex + 1) / images.length) * 100}%` }}
-              ></div>
-            </div>
-          </div>
-
-          {images.length > 1 && (
-            <div className={styles.thumbnailGrid}>
-              {images.map((image, index) => (
-                <button
-                  key={`${image}-${index}`}
-                  type="button"
-                  className={`${styles.thumbnailBtn} ${index === currentImageIndex ? styles.thumbnailActive : ''}`}
-                  onClick={() => setCurrentImageIndex(index)}
-                  aria-label={`View product image ${index + 1}`}
-                >
-                  <img src={image} alt={`${product.name} ${index + 1}`} />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        
-        {/* Right Info Section */}
-        <div className={styles.productInfoWrapper}>
-          <div className={styles.productInfo}>
-            <h1 className={styles.title}>{product.name}</h1>
-            <p className={styles.productCode}>Product Code: {product.id.length > 8 ? product.id.substring(0,8).toUpperCase() : product.id.toUpperCase()}0905</p>
-            
-            <p className={styles.price}>{formatCurrency(product.price)}</p>
-            
-            <div className={styles.colorSection}>
-              <p className={styles.colorLabel}><strong>Color:</strong> Dark Mauve</p>
-              <div className={styles.colorSwatches}>
-                {images.slice(0, 4).map((image, index) => (
-                  <button
-                    key={`${image}-swatch-${index}`}
-                    type="button"
-                    className={`${styles.swatch} ${index === currentImageIndex ? styles.swatchActive : ''}`}
-                    onClick={() => setCurrentImageIndex(index)}
-                    aria-label={`Select image ${index + 1}`}
-                  >
-                    <img src={image} alt={`Preview ${index + 1}`} />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className={styles.sizeSection}>
-              <div className={styles.sizeHeader}>
-                <span>Select Size</span>
-                <Link href="/pages/size-guide" className={styles.sizeGuide}>
-                  Size Guide <Ruler size={14} className={styles.rulerIcon} />
-                </Link>
-              </div>
-              <div className={styles.sizeGrid}>
-                {sizes.map(size => (
-                  <button 
-                    key={size.label}
-                    disabled={!size.available}
-                    className={`
-                      ${styles.sizeBtn} 
-                      ${selectedSize === size.label ? styles.sizeSelected : ''}
-                      ${!size.available ? styles.sizeDisabled : ''}
-                    `}
-                    onClick={() => setSelectedSize(size.label)}
-                  >
-                    {size.label}
-                  </button>
-                ))}
-              </div>
-              <div className={styles.stockWarning}>
-                <span className={styles.stockBadge}>Only 1 left</span>
-              </div>
-            </div>
-            
-            <button className={styles.addToCartBtn} onClick={handleAddToCart}>
-              <Lock size={16} className={styles.btnIcon} /> Add to bag
-            </button>
-            
-            <button className={styles.findInStoreBtn}>
-              Find in store
-            </button>
-            
-            <div className={styles.socialShare}>
-              <button type="button" onClick={handleNativeShare} aria-label="Share product">
-                <Share2 size={20} strokeWidth={1.5} />
-              </button>
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent(`${shareText} ${productUrl}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Share on WhatsApp"
-              >
-                <MessageCircle size={20} strokeWidth={1.5} />
-              </a>
-              <a href="tel:+8801711000000" aria-label="Call CartsVista">
-                <Phone size={20} strokeWidth={1.5} />
-              </a>
-              <a
-                href={`mailto:support@cartsvista.com?subject=${encodeURIComponent(product?.name || 'CartsVista product')}&body=${encodeURIComponent(`${shareText}\n\n${productUrl}`)}`}
-                aria-label="Share by email"
-              >
-                <Mail size={20} strokeWidth={1.5} />
-              </a>
-            </div>
-            
-            <div className={styles.accordions}>
-              <div className={styles.accordion} onClick={() => toggleAccordion(1)}>
-                <h3>Details {openAccordion === 1 ? <Minus size={16} /> : <Plus size={16} />}</h3>
-                {openAccordion === 1 && (
-                  <div className={styles.accordionContent}>
-                    <p>{product.description || "Premium quality fabric, designed for comfort and style."}</p>
-                  </div>
-                )}
-              </div>
-              <div className={styles.accordion} onClick={() => toggleAccordion(2)}>
-                <h3>Materials {openAccordion === 2 ? <Minus size={16} /> : <Plus size={16} />}</h3>
-                {openAccordion === 2 && (
-                  <div className={styles.accordionContent}>
-                    <p>{product.materials || "100% Cotton / Premium Blend."}</p>
-                  </div>
-                )}
-              </div>
-              <div className={styles.accordion} onClick={() => toggleAccordion(3)}>
-                <h3>Care {openAccordion === 3 ? <Minus size={16} /> : <Plus size={16} />}</h3>
-                {openAccordion === 3 && (
-                  <div className={styles.accordionContent}>
-                    <p>Machine wash cold, do not bleach, tumble dry low.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([productSchema, breadcrumbSchema]).replace(/</g, '\\u003c') }}
+      />
+      <ProductClient product={product} />
+    </>
   );
 }

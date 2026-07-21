@@ -2,6 +2,7 @@
 
 import { use, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ChevronLeft } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import styles from './page.module.css';
@@ -12,6 +13,7 @@ const CAMPAIGNS = {
     title: 'Summer Edition 2026',
     subtitle: 'Lightweight tailoring, refined cotton, and warm-weather essentials curated for a polished summer wardrobe.',
     image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2073&auto=format&fit=crop',
+    imagePosition: 'center',
     queries: [
       { category: 'men', subcategory: 'T-Shirts' },
       { category: 'men', subcategory: 'Chinos' },
@@ -23,6 +25,7 @@ const CAMPAIGNS = {
     title: 'New Beachwear Autumn 2026',
     subtitle: 'Relaxed silhouettes, coastal colors, and easy layering pieces for travel, weekends, and early autumn escapes.',
     image: 'https://images.unsplash.com/photo-1519046904884-53103b34b206?q=80&w=2070&auto=format&fit=crop',
+    imagePosition: 'center',
     queries: [
       { category: 'men', subcategory: 'T-Shirts' },
       { category: 'women', subcategory: 'Jeans & Pants' },
@@ -30,10 +33,11 @@ const CAMPAIGNS = {
     ],
   },
   'flash-sale': {
-    eyebrow: 'Limited Offer',
-    title: 'Mid-Summer Flash Sale',
-    subtitle: 'Selected statement pieces and everyday essentials gathered into one fast-moving edit.',
-    image: 'https://bysl-com-ilyn.s3.ap-south-1.amazonaws.com/media/images/2026/06/tab_20260630152259812_large.webp',
+    eyebrow: 'Seasonal Edit · 2026',
+    title: 'The Summer Sale',
+    subtitle: 'Up to 50% off selected occasionwear, statement pieces, and refined everyday essentials.',
+    image: '/promos/promo2-seasonal-sale.webp',
+    imagePosition: '68% center',
     queries: [
       { category: 'women', subcategory: 'Dresses' },
       { category: 'men', subcategory: 'Shirts' },
@@ -41,10 +45,12 @@ const CAMPAIGNS = {
     ],
   },
   'artful-living': {
-    eyebrow: 'Home & Style',
-    title: 'Artful Living',
-    subtitle: 'Soft textures, polished looks, and elevated pieces selected for everyday style moments.',
-    image: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?q=80&w=1932&auto=format&fit=crop',
+    eyebrow: 'The Atelier',
+    title: 'Modern Tailoring',
+    subtitle: 'Precision in every detail, from refined construction to timeless finishing.',
+    image: '/promos/promo3-modern-tailoring.webp',
+    imagePosition: '64% center',
+    tone: 'light',
     queries: [
       { category: 'women', subcategory: 'Kurtis & Tunics' },
       { category: 'women', subcategory: 'Tops' },
@@ -52,10 +58,11 @@ const CAMPAIGNS = {
     ],
   },
   'beat-the-heat': {
-    eyebrow: 'Warm Weather Picks',
-    title: 'Beat the Heat',
-    subtitle: 'Breathable cotton, easy casual sets, and clean summer basics ready for daily wear.',
-    image: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=2070&auto=format&fit=crop',
+    eyebrow: 'The Signature Edit',
+    title: 'Finishing Touches',
+    subtitle: 'Fragrance, watches, and silk accents selected to complete a considered wardrobe.',
+    image: '/promos/promo4-signature-accessories.webp',
+    imagePosition: '64% center',
     queries: [
       { category: 'men', subcategory: 'T-Shirts' },
       { category: 'kids', subcategory: 'Casualwear & Sets' },
@@ -113,9 +120,16 @@ export default function CampaignPage({ params }) {
   return (
     <main className={styles.page}>
       <section className={styles.hero}>
-        <img src={campaign.image} alt={campaign.title} />
-        <div className={styles.heroOverlay} />
-        <div className={styles.heroContent}>
+        <Image
+          src={campaign.image}
+          alt={campaign.title}
+          fill
+          sizes="100vw"
+          loading="eager"
+          style={{ objectPosition: campaign.imagePosition || 'center' }}
+        />
+        <div className={`${styles.heroOverlay} ${campaign.tone === 'light' ? styles.heroOverlayLight : ''}`} />
+        <div className={`${styles.heroContent} ${campaign.tone === 'light' ? styles.heroContentLight : ''}`}>
           <Link href="/" className={styles.backLink}>
             <ChevronLeft size={16} /> Back to store
           </Link>

@@ -32,6 +32,12 @@
   line-height: 1.6;
 }
 
+.card .guestNote {
+  margin-top: 0.55rem;
+  font-size: 0.82rem;
+  color: #888;
+}
+
 .actions {
   display: flex;
   justify-content: center;

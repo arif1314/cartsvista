@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff, AlertCircle, CheckCircle, Loader } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
@@ -301,6 +302,11 @@ function LoginForm() {
                   {isLogin ? 'Register now' : 'Sign in'}
                 </button>
               </p>
+              {isLogin && (
+                <p className={styles.guestOrderLink}>
+                  Ordered without an account? <Link href="/orders/track">Track your order</Link>
+                </p>
+              )}
             </div>
           )}
         </div>

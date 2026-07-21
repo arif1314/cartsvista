@@ -5,8 +5,9 @@
 
 .hero {
   position: relative;
-  min-height: 460px;
+  min-height: clamp(400px, 34vw, 520px);
   overflow: hidden;
+  background: #17120f;
 }
 
 .hero img {
@@ -20,7 +21,12 @@
 .heroOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.12));
+  z-index: 1;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.74) 0%, rgba(0, 0, 0, 0.48) 42%, rgba(0, 0, 0, 0.08) 78%);
+}
+
+.heroOverlayLight {
+  background: linear-gradient(90deg, rgba(238, 222, 194, 0.96) 0%, rgba(229, 208, 174, 0.82) 44%, rgba(229, 208, 174, 0.05) 80%);
 }
 
 .heroContent {
@@ -30,7 +36,8 @@
   flex-direction: column;
   justify-content: center;
   max-width: 760px;
-  min-height: 460px;
+  width: 70%;
+  min-height: clamp(400px, 34vw, 520px);
   padding: 3rem clamp(1.25rem, 6vw, 5rem);
   color: #ffffff;
 }
@@ -57,6 +64,7 @@
 }
 
 .heroContent h1 {
+  color: #ffffff;
   font-family: var(--font-sans);
   font-size: clamp(2.6rem, 7vw, 5.8rem);
   font-weight: 850;
@@ -70,6 +78,26 @@
   font-size: clamp(0.95rem, 2vw, 1.15rem);
   line-height: 1.65;
   max-width: 600px;
+}
+
+.heroContentLight {
+  color: #1d1712;
+}
+
+.heroContentLight .backLink {
+  color: rgba(29, 23, 18, 0.76);
+}
+
+.heroContentLight span {
+  color: #76522d;
+}
+
+.heroContentLight h1 {
+  color: #17120e;
+}
+
+.heroContentLight p {
+  color: rgba(29, 23, 18, 0.74);
 }
 
 .content {
@@ -176,7 +204,25 @@
 @media (max-width: 560px) {
   .hero,
   .heroContent {
-    min-height: 420px;
+    min-height: 430px;
+  }
+
+  .heroContent {
+    width: 88%;
+    padding: 2rem 1.25rem;
+  }
+
+  .heroContent h1 {
+    font-size: clamp(2.15rem, 12vw, 3.5rem);
+  }
+
+  .heroContent p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .backLink {
+    margin-bottom: 1.5rem;
   }
 
   .content {

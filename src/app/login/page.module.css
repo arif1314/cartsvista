@@ -214,6 +214,17 @@
   cursor: pointer;
 }
 
+.guestOrderLink {
+  margin-top: 1rem;
+}
+
+.guestOrderLink a {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 /* Alerts */
 .alertError, .alertSuccess {
   display: flex;

@@ -60,7 +60,10 @@ export default function CheckoutPage() {
         return;
       }
 
-      router.push(`/checkout/success?order_id=${data.order.id}`);
+      const access = data.order.guestAccessToken
+        ? `&access=${encodeURIComponent(data.order.guestAccessToken)}`
+        : '';
+      router.push(`/checkout/success?order_id=${data.order.id}${access}`);
     } catch (error) {
       const rawMessage = String(error.message || '');
       const friendlyMessage = rawMessage.toLowerCase().includes('row-level security')
